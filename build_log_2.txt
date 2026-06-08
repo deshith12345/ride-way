@@ -1,0 +1,23 @@
+
+> rideway@0.1.0 build
+> next build
+
+Γû▓ Next.js 16.1.6 (Turbopack)
+- Environments: .env
+
+ΓÜá The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+Γ£ô Compiled successfully in 6.0s
+  Running TypeScript ...
+  Collecting page data using 15 workers ...
+  Generating static pages using 15 workers (0/29) ...
+  Generating static pages using 15 workers (7/29) 
+Error occurred prerendering page "/driver/dashboard". Read more: https://nextjs.org/docs/messages/prerender-error
+Error: Attempted to call useSession() from the server but useSession is on the client. It's not possible to invoke a client function from the server, it can only be rendered as a Component or passed to props of a Client Component.
+    at <unknown> (C:\Users\Deshith\Documents\Desktop\rideway\.next\server\chunks\ssr\_2fe486c4._.js:1:6536)
+    at q (C:\Users\Deshith\Documents\Desktop\rideway\.next\server\chunks\ssr\_2fe486c4._.js:1:8170)
+    at stringify (<anonymous>) {
+  digest: '1449211033'
+}
+Export encountered an error on /driver/dashboard/page: /driver/dashboard, exiting the build.
+Γ¿» Next.js build worker exited with code: 1 and signal: null

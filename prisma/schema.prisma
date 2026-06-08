@@ -1,0 +1,251 @@
+datasource db {
+  provider = "mongodb"
+  url      = env("MONGODB_URI")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  ADMIN
+  DRIVER
+  TRAVELLER
+}
+
+enum BusType {
+  AC
+  NON_AC
+  LUXURY
+  SUPER_LUXURY
+  HIGHWAY
+}
+
+enum TripStatus {
+  SCHEDULED
+  BOARDING
+  DEPARTED
+  IN_TRANSIT
+  ARRIVED
+  COMPLETED
+  CANCELLED
+  DELAYED
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  REFUNDED
+  COMPLETED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+model User {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          UserRole  @default(TRAVELLER)
+  phone         String?
+  
+  // Driver specific
+  licenseNumber String?
+  isVerified    Boolean   @default(false)
+  
+  // Relations
+  bookings      Booking[]
+  assignedTrips Trip[]    @relation("DriverTrips")
+  reviews       Review[]
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  accounts      Account[]
+  sessions      Session[]
+}
+
+model Account {
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String  @db.ObjectId
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.String
+  access_token      String? @db.String
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.String
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  sessionToken String   @unique
+  userId       String   @db.ObjectId
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Bus {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  registrationNo  String    @unique
+  number          String?   // Display number
+  type            BusType
+  totalSeats      Int
+  
+  // JSON structure for seat layout (rows, columns, aisle position, etc.)
+  seatLayout      Json?
+  
+  amenities       String[] // e.g., ["WIFI", "USB", "TV"]
+  images          String[]
+  
+  // Relations
+  trips           Trip[]
+  
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model Route {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  name            String    // e.g., "Colombo - Kandy"
+  origin          String
+  destination     String
+  totalDistance   Float?    // in KM
+  estimatedDuration Int?    // in minutes
+  
+  // Relations
+  stops           RouteStop[]
+  trips           Trip[]
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model RouteStop {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  routeId         String    @db.ObjectId
+  stopName        String
+  order           Int       // Sequence number (0 for origin, N for destination)
+  
+  distanceFromStart Float?  // KM from origin
+  arrivalOffset   Int?      // Minutes from start
+  departureOffset Int?      // Minutes from start
+  
+  route           Route     @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  
+  @@unique([routeId, order])
+}
+
+model Trip {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  routeId         String    @db.ObjectId
+  busId           String    @db.ObjectId
+  driverId        String?   @db.ObjectId
+  
+  departureTime   DateTime
+  arrivalTime     DateTime
+  
+  status          TripStatus @default(SCHEDULED)
+  
+  basePrice       Float
+  
+  // Relations
+  route           Route     @relation(fields: [routeId], references: [id])
+  bus             Bus       @relation(fields: [busId], references: [id])
+  driver          User?     @relation("DriverTrips", fields: [driverId], references: [id])
+  bookings        Booking[]
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model Booking {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  tripId          String    @db.ObjectId
+  userId          String    @db.ObjectId
+  
+  bookingDate     DateTime  @default(now())
+  totalAmount     Float
+  status          BookingStatus @default(PENDING)
+  paymentStatus   PaymentStatus @default(PENDING)
+  
+  // Relations
+  trip            Trip      @relation(fields: [tripId], references: [id])
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tickets         Ticket[]
+  payment         Payment?
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model Ticket {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  bookingId       String    @db.ObjectId
+  
+  seatNumber      String
+  passengerName   String
+  passengerAge    Int?
+  passengerGender Gender?
+  
+  price           Float
+  qrCode          String?   // Token for QR
+  
+  status          String    @default("VALID") // VALID, USED, CANCELLED
+  
+  booking         Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+}
+
+model Payment {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  bookingId       String    @unique @db.ObjectId
+  
+  amount          Float
+  currency        String    @default("LKR")
+  method          String?   // CARD, WALLET
+  stripePaymentId String?
+  status          PaymentStatus
+  
+  booking         Booking   @relation(fields: [bookingId], references: [id])
+  
+  createdAt       DateTime  @default(now())
+}
+
+model Review {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  rating    Int
+  comment   String?
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
