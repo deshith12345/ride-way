@@ -3,25 +3,34 @@ import type { NextAuthConfig } from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
 import CredentialsProvider from "next-auth/providers/credentials"
 
-export const authConfig = {
-    providers: [
+const providers = []
+
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+    providers.push(
         GoogleProvider({
-            clientId: process.env.GOOGLE_CLIENT_ID || "",
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
             allowDangerousEmailAccountLinking: true,
-        }),
-        CredentialsProvider({
-            name: "credentials",
-            credentials: {
-                email: { label: "Email", type: "email" },
-                password: { label: "Password", type: "password" },
-            },
-            async authorize(credentials) {
-                // This will be overridden in auth.ts because it needs prisma/bcrypt
-                return null
-            },
-        }),
-    ],
+        })
+    )
+}
+
+providers.push(
+    CredentialsProvider({
+        name: "credentials",
+        credentials: {
+            email: { label: "Email", type: "email" },
+            password: { label: "Password", type: "password" },
+        },
+        async authorize(credentials) {
+            // This will be overridden in auth.ts because it needs prisma/bcrypt
+            return null
+        },
+    })
+)
+
+export const authConfig = {
+    providers,
     pages: {
         signIn: "/login",
         error: "/auth/error",
