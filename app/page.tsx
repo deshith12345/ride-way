@@ -115,68 +115,71 @@ export default async function Home() {
   return (
     <main className="overflow-hidden bg-[#f6f8fb] text-slate-950">
       <section
-        className="relative min-h-[calc(100svh-4rem)] bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('/hero-bg.jpg')" }}
+        className="relative min-h-[calc(100svh-4rem)] overflow-hidden bg-slate-950 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: "url('/bus-exterior-v2.jpg')" }}
       >
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,14,26,0.18),rgba(8,14,26,0.54)_46%,rgba(246,248,251,0.98)_94%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_22%_16%,rgba(255,255,255,0.38),transparent_29%),radial-gradient(circle_at_84%_22%,rgba(14,165,233,0.24),transparent_28%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,0.22),rgba(2,6,23,0.72)_55%,rgba(246,248,251,0.98)_96%)]" />
+        <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#f6f8fb] via-[#f6f8fb]/80 to-transparent" />
 
-        <div className="container relative mx-auto grid min-h-[calc(100svh-4rem)] gap-8 px-4 py-14 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
-          <div className="max-w-4xl text-white">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/20 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] shadow-2xl shadow-slate-950/15 backdrop-blur-2xl">
+        <div className="container relative mx-auto flex min-h-[calc(100svh-4rem)] flex-col items-center justify-center px-4 py-16 text-center">
+          <div className="max-w-5xl text-white">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/35 bg-white/15 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] shadow-2xl shadow-slate-950/20 backdrop-blur-2xl">
               <Bus className="h-4 w-4 text-white" />
-              RideWay bus booking
+              Bus booking across Sri Lanka
             </div>
-            <h1 className="max-w-4xl text-5xl font-black leading-[0.96] tracking-normal drop-shadow-2xl sm:text-6xl lg:text-7xl">
-              Book your next ride with a calmer flow.
+            <h1 className="mx-auto max-w-4xl text-5xl font-black leading-[0.96] tracking-normal drop-shadow-2xl sm:text-6xl lg:text-7xl">
+              RideWay
             </h1>
-            <p className="mt-6 max-w-2xl text-lg font-medium leading-8 text-white/90 sm:text-xl">
-              Find routes, choose seats, pay by card, and keep your QR ticket ready from one polished traveller experience.
+            <p className="mx-auto mt-6 max-w-2xl text-lg font-medium leading-8 text-white/90 sm:text-xl">
+              Search routes, reserve seats, pay by card, and carry your QR ticket from one polished traveller dashboard.
             </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Button asChild className="h-14 rounded-full bg-white px-7 text-base font-black text-slate-950 shadow-xl shadow-slate-950/20 hover:bg-blue-50">
-                <Link href="/routes">
-                  Browse routes <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="h-14 rounded-full border-white/45 bg-white/16 px-7 text-base font-black text-white shadow-xl shadow-slate-950/10 backdrop-blur-2xl hover:bg-white/25 hover:text-white">
-                <Link href="/track">Track bus</Link>
-              </Button>
+          </div>
+
+          <div className="mt-10 w-full max-w-4xl rounded-[2.25rem] border border-white/35 bg-white/88 p-4 shadow-2xl shadow-slate-950/25 backdrop-blur-2xl">
+            <div className="grid gap-4 rounded-[1.75rem] bg-white p-5 shadow-sm sm:grid-cols-[1fr_auto] sm:items-center">
+              <div className="text-left">
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-blue-600">Start here</p>
+                <h2 className="mt-2 text-2xl font-black text-slate-950">Choose a route and book securely</h2>
+                <p className="mt-2 font-medium leading-7 text-slate-600">
+                  Browse available trips first. Booking opens after sign in, so every ticket stays connected to your account.
+                </p>
+              </div>
+              <div className="flex flex-col gap-3 sm:min-w-52">
+                <Button asChild className="h-12 rounded-full bg-blue-600 px-6 font-black text-white shadow-lg shadow-blue-200 hover:bg-blue-700">
+                  <Link href="/routes">
+                    Browse routes <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" className="h-12 rounded-full border-slate-200 bg-white px-6 font-black text-slate-700">
+                  <Link href="/track">Track bus</Link>
+                </Button>
+              </div>
             </div>
           </div>
 
-          <div className="rounded-[2.6rem] border border-white/45 bg-white/76 p-4 shadow-2xl shadow-slate-950/20 backdrop-blur-2xl">
-            <div className="rounded-[2rem] bg-white p-5 shadow-sm">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-xs font-black uppercase tracking-[0.18em] text-blue-600">RideWay today</p>
-                  <h2 className="mt-2 text-2xl font-black text-slate-950">Ready for your next trip</h2>
-                </div>
-                <div className="flex h-14 w-14 items-center justify-center rounded-[1.4rem] bg-blue-600 text-white shadow-lg shadow-blue-200">
-                  <Bus className="h-7 w-7" />
-                </div>
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            {trustItems.map((item) => (
+              <div
+                key={item.label}
+                className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/15 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-slate-950/10 backdrop-blur-2xl"
+              >
+                <item.icon className="h-4 w-4" />
+                {item.label}
               </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-              <div className="mt-6 grid grid-cols-2 gap-3">
-                {stats.map((stat) => (
-                  <div key={stat.label} className="rounded-[1.4rem] bg-[#f6f8fb] p-4">
-                    <p className="text-2xl font-black text-slate-950">{stat.value}</p>
-                    <p className="mt-1 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">{stat.label}</p>
-                  </div>
-                ))}
+      <section className="relative -mt-16 pb-8">
+        <div className="container mx-auto px-4">
+          <div className="grid gap-3 rounded-[2.25rem] border border-white/80 bg-white/84 p-3 shadow-xl shadow-slate-200/70 backdrop-blur-2xl md:grid-cols-4">
+            {stats.map((stat) => (
+              <div key={stat.label} className="rounded-[1.7rem] bg-white px-5 py-5 shadow-sm ring-1 ring-slate-100">
+                <p className="text-3xl font-black text-slate-950">{stat.value}</p>
+                <p className="mt-1 text-xs font-black uppercase tracking-[0.15em] text-slate-500">{stat.label}</p>
               </div>
-
-              <div className="mt-5 space-y-2">
-                {trustItems.map((item) => (
-                  <div key={item.label} className="flex items-center gap-3 rounded-[1.25rem] bg-slate-50 px-4 py-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-white text-blue-600 shadow-sm">
-                      <item.icon className="h-4 w-4" />
-                    </div>
-                    <p className="text-sm font-black text-slate-700">{item.label}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
