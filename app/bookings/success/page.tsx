@@ -1,15 +1,15 @@
 
 "use client"
 
-import { useEffect, Suspense } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { Suspense } from "react"
+import { useSearchParams } from "next/navigation"
 import { CheckCircle2, Ticket, ArrowRight, Home } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 
 function SuccessContent() {
     const searchParams = useSearchParams()
-    const sessionId = searchParams.get("session_id")
+    const bookingId = searchParams.get("booking_id")
 
     return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
@@ -20,7 +20,7 @@ function SuccessContent() {
 
                 <h1 className="text-3xl font-black text-slate-900 mb-2">Booking Confirmed!</h1>
                 <p className="text-slate-500 font-medium mb-10 leading-relaxed">
-                    Thank you for choosing RideWay. Your payment was successful and your seats are now reserved.
+                    Thank you for choosing RideWay. Your card payment was accepted and your seats are now reserved.
                 </p>
 
                 <div className="space-y-4">
@@ -45,7 +45,7 @@ function SuccessContent() {
                 </div>
 
                 <p className="mt-10 text-[10px] text-slate-400 font-black uppercase tracking-widest leading-relaxed">
-                    A confirmation email has been sent to your registered address with the booking details.
+                    {bookingId ? `Booking reference: ${bookingId.slice(-8).toUpperCase()}` : "Your booking reference is available in the dashboard."}
                 </p>
             </div>
         </div>

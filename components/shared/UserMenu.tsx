@@ -28,14 +28,6 @@ export default function UserMenu({ user }: UserMenuProps) {
         ? user.name.split(" ").map(n => n[0]).join("").toUpperCase()
         : user.email?.[0].toUpperCase() || "U"
 
-    const normalizedRole = user.role?.toUpperCase()
-
-    const dashboardHref = normalizedRole === "ADMIN"
-        ? "/admin/dashboard"
-        : normalizedRole === "DRIVER"
-            ? "/driver/dashboard"
-            : "/dashboard"
-
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -57,7 +49,7 @@ export default function UserMenu({ user }: UserMenuProps) {
                     </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-slate-50" />
-                <Link href={dashboardHref}>
+                <Link href="/dashboard">
                     <DropdownMenuItem className="rounded-xl p-3 font-bold text-slate-600 flex items-center gap-2 cursor-pointer focus:bg-blue-50 focus:text-blue-600">
                         <LayoutDashboard className="h-4 w-4" />
                         Dashboard

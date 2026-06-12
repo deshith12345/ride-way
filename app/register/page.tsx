@@ -1,9 +1,9 @@
 
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { signIn } from "next-auth/react"
+import { getProviders, signIn } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -12,31 +12,12 @@ import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { Bus, ShieldCheck, User, Loader2 } from "lucide-react"
 
-const roleConfigs = {
-  TRAVELLER: {
-    label: "Traveller",
-    icon: <User className="h-6 w-6" />,
-    bg: "/traveller-bg.jpg",
-    accent: "blue",
-    title: "Join as a Traveller",
-    desc: "Book tickets, track buses and travel with ease."
-  },
-  DRIVER: {
-    label: "Driver",
-    icon: <Bus className="h-6 w-6" />,
-    bg: "/driver-bg.jpg",
-    accent: "emerald",
-    title: "Join as a Driver",
-    desc: "Manage your trips, scan tickets and earn more."
-  },
-  ADMIN: {
-    label: "Admin",
-    icon: <ShieldCheck className="h-6 w-6" />,
-    bg: "/admin-bg.jpg",
-    accent: "slate",
-    title: "Join as an Admin",
-    desc: "Manage the fleet, routes and system settings."
-  }
+const travellerConfig = {
+  label: "Traveller",
+  icon: <User className="h-6 w-6" />,
+  bg: "/traveller-bg.jpg",
+  title: "Join RideWay",
+  desc: "Book tickets, track buses and travel with ease."
 }
 
 export default function RegisterPage() {
@@ -48,12 +29,17 @@ export default function RegisterPage() {
     password: "",
     confirmPassword: "",
     phone: "",
-    role: "TRAVELLER" as keyof typeof roleConfigs,
-    licenseNumber: "",
     acceptTerms: false,
   })
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [googleEnabled, setGoogleEnabled] = useState(false)
+
+  useEffect(() => {
+    getProviders().then((providers) => {
+      setGoogleEnabled(Boolean(providers?.google))
+    })
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -69,11 +55,6 @@ export default function RegisterPage() {
       return
     }
 
-    if (formData.role === "DRIVER" && !formData.licenseNumber) {
-      setError("License number is required for drivers")
-      return
-    }
-
     setLoading(true)
 
     try {
@@ -85,8 +66,7 @@ export default function RegisterPage() {
           email: formData.email,
           password: formData.password,
           phone: formData.phone,
-          role: formData.role,
-          licenseNumber: formData.role === "DRIVER" ? formData.licenseNumber : undefined,
+          role: "TRAVELLER",
         }),
       })
 
@@ -104,38 +84,27 @@ export default function RegisterPage() {
     }
   }
 
-  const currentRole = roleConfigs[formData.role]
-
-  return (
+    return (
     <div className="min-h-screen flex flex-col lg:flex-row bg-white overflow-hidden">
       {/* Left Side: Dynamic Background & Branding */}
       <div className="lg:w-1/2 relative hidden lg:flex flex-col justify-between p-12 text-white overflow-hidden">
         {/* Background Images Layer */}
-        {Object.entries(roleConfigs).map(([key, config]) => (
-          <div
-            key={key}
-            className={cn(
-              "absolute inset-0 transition-opacity duration-1000 ease-in-out",
-              formData.role === key ? "opacity-100 scale-100" : "opacity-0 scale-110"
-            )}
-          >
-            <div className="absolute inset-0 bg-black/40 z-10" />
-            <img
-              src={config.bg}
-              alt={config.label}
-              className="w-full h-full object-cover transition-transform duration-[10000ms] ease-linear"
-              style={{ transform: formData.role === key ? 'scale(1.1)' : 'scale(1)' }}
-            />
-          </div>
-        ))}
+        <div className="absolute inset-0 transition-opacity duration-1000 ease-in-out">
+          <div className="absolute inset-0 bg-black/40 z-10" />
+          <img
+            src={travellerConfig.bg}
+            alt={travellerConfig.label}
+            className="w-full h-full object-cover transition-transform duration-[10000ms] ease-linear scale-110"
+          />
+        </div>
 
 
 
         <div className="relative z-20 max-w-md animate-in fade-in slide-in-from-left-8 duration-700">
 
-          <h2 className="text-5xl font-black mb-4 leading-tight">{currentRole.title}</h2>
+          <h2 className="text-5xl font-black mb-4 leading-tight">{travellerConfig.title}</h2>
           <p className="text-xl text-white/80 font-medium leading-relaxed">
-            {currentRole.desc}
+            {travellerConfig.desc}
           </p>
         </div>
 
@@ -143,8 +112,8 @@ export default function RegisterPage() {
         <div className="relative z-20 flex justify-between items-center text-sm text-white/60 font-medium">
           <span>&copy; 2024 RideWay Inc.</span>
           <div className="flex gap-6">
-            <a href="#" className="hover:text-white transition-colors">Privacy</a>
-            <a href="#" className="hover:text-white transition-colors">Terms</a>
+            <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+            <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>
           </div>
         </div>
       </div>
@@ -165,7 +134,7 @@ export default function RegisterPage() {
 
           <div className="mb-10">
             <h1 className="text-4xl font-black text-slate-900 mb-2">Create your account</h1>
-            <p className="text-slate-500 font-medium">Choose your role and fill in the details below.</p>
+            <p className="text-slate-500 font-medium">Create a traveller account and book your next ride.</p>
           </div>
 
           {error && (
@@ -186,39 +155,6 @@ export default function RegisterPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Role Selection Tabs */}
-            <div className="space-y-3">
-              <Label className="text-xs font-black uppercase tracking-widest text-slate-400">Account Type</Label>
-              <div className="grid grid-cols-3 gap-3">
-                {Object.entries(roleConfigs).map(([key, config]) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => setFormData({ ...formData, role: key as keyof typeof roleConfigs })}
-                    className={cn(
-                      "flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all duration-300 group",
-                      formData.role === key
-                        ? "border-blue-600 bg-blue-50/50 ring-4 ring-blue-50"
-                        : "border-slate-100 hover:border-slate-200 hover:bg-slate-50"
-                    )}
-                  >
-                    <div className={cn(
-                      "p-2 rounded-lg mb-2 transition-colors",
-                      formData.role === key ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-400 group-hover:bg-white"
-                    )}>
-                      {config.icon}
-                    </div>
-                    <span className={cn(
-                      "text-xs font-black uppercase tracking-tight",
-                      formData.role === key ? "text-blue-600" : "text-slate-500"
-                    )}>{config.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <Separator className="bg-slate-50" />
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2 text-left">
                 <Label htmlFor="firstName" className="text-sm font-bold text-slate-700 ml-1">First Name</Label>
@@ -269,22 +205,6 @@ export default function RegisterPage() {
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
               />
             </div>
-
-            {formData.role === "DRIVER" && (
-              <div className="space-y-3 p-6 rounded-2xl bg-emerald-50 border border-emerald-100 animate-in slide-in-from-top-2 duration-300">
-                <Label htmlFor="licenseNumber" className="flex items-center gap-2 text-sm font-bold text-emerald-800">
-                  <ShieldCheck className="h-4 w-4" /> Driver's License Number
-                </Label>
-                <Input
-                  id="licenseNumber"
-                  required={formData.role === "DRIVER"}
-                  className="h-12 rounded-xl border-emerald-200 bg-white focus:ring-emerald-500"
-                  value={formData.licenseNumber}
-                  onChange={(e) => setFormData({ ...formData, licenseNumber: e.target.value })}
-                  placeholder="LP-XXXX-XXXX"
-                />
-              </div>
-            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2 text-left">
@@ -350,14 +270,11 @@ export default function RegisterPage() {
               type="button"
               variant="outline"
               className="w-full h-12 rounded-xl border-slate-200 font-bold text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-3 shadow-sm transition-all active:scale-95"
-              onClick={() => {
-                // Set a cookie or pass via callbackUrl to auth.ts
-                document.cookie = `intended_role=${formData.role}; path=/; max-age=300; SameSite=Lax`
-                signIn("google", { callbackUrl: "/dashboard" })
-              }}
+              disabled={!googleEnabled}
+              onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
             >
               <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" className="w-5 h-5" alt="Google" />
-              Register as {currentRole.label} with Google
+              {googleEnabled ? "Register with Google" : "Google registration unavailable"}
             </Button>
 
             <Link href="/login" className="w-full">
@@ -370,8 +287,4 @@ export default function RegisterPage() {
       </div>
     </div>
   )
-}
-
-function Separator({ className }: { className?: string }) {
-  return <div className={cn("h-px w-full", className)} />
 }

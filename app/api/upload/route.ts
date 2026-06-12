@@ -1,6 +1,6 @@
 
 import { NextResponse } from 'next/server';
-import cloudinary from '@/lib/cloudinary';
+import cloudinary, { isCloudinaryConfigured } from '@/lib/cloudinary';
 import { auth } from '@/auth';
 
 export async function POST(req: Request) {
@@ -8,6 +8,13 @@ export async function POST(req: Request) {
         const session = await auth();
         if (!session?.user || session.user.role !== 'ADMIN') {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        if (!isCloudinaryConfigured) {
+            return NextResponse.json(
+                { error: 'Image uploads require Cloudinary environment variables.' },
+                { status: 503 }
+            );
         }
 
         const formData = await req.formData();

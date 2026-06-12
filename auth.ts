@@ -4,18 +4,20 @@ import CredentialsProvider from "next-auth/providers/credentials"
 import { authConfig } from "./auth.config"
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
-import { cookies } from "next/headers"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import { UserRole } from "@prisma/client"
 import type { Provider } from "next-auth/providers"
 
+const googleClientId = process.env.GOOGLE_CLIENT_ID || process.env.AUTH_GOOGLE_ID
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET || process.env.AUTH_GOOGLE_SECRET
+
 const providers: Provider[] = []
 
-if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+if (googleClientId && googleClientSecret) {
   providers.push(
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      clientId: googleClientId,
+      clientSecret: googleClientSecret,
       allowDangerousEmailAccountLinking: true,
     })
   )
@@ -87,17 +89,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             user.role = existingUser.role
             user.id = existingUser.id
           } else {
-            const cookieStore = await cookies()
-            const intendedRole = cookieStore.get("intended_role")?.value || "TRAVELLER"
-            
-            // Manually pre-create the user with the correct role
-            // so NextAuth/PrismaAdapter links the OAuth account to this user
             const newUser = await prisma.user.create({
               data: {
                 email,
                 name: user.name,
                 image: user.image,
-                role: (intendedRole.toUpperCase() as UserRole) || UserRole.TRAVELLER,
+                role: UserRole.TRAVELLER,
               }
             })
             
@@ -113,4 +110,3 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
 })
-

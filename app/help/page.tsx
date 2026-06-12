@@ -32,9 +32,9 @@ export default function HelpPage() {
             category: "booking"
         },
         {
-            question: "Can I cancel my booking and get a refund?",
-            answer: "Yes, you can cancel your booking up to 24 hours before the departure time for a 75% refund. Cancellations made within 24 hours but before 6 hours of departure are eligible for a 50% refund.",
-            category: "refund"
+            question: "Can I cancel my booking?",
+            answer: "Yes, you can cancel eligible upcoming bookings from your dashboard. If you need help with a payment issue, contact support with your booking reference.",
+            category: "payment"
         },
         {
             question: "How do I track my bus location?",
@@ -114,7 +114,7 @@ export default function HelpPage() {
                             Categories
                         </h2>
                         {[
-                            { icon: CreditCard, label: "Payments & Refunds" },
+                            { icon: CreditCard, label: "Payments" },
                             { icon: ShieldCheck, label: "Security & Privacy" },
                             { icon: Clock, label: "Booking & Cancellations" },
                             { icon: User, label: "Account Management" }

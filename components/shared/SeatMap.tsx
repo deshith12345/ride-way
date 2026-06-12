@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from 'react'
+import React, { useMemo, useState } from 'react'
 import { cn } from "@/lib/utils"
 import { Armchair, CircleDot } from "lucide-react"
 
@@ -17,16 +17,16 @@ interface SeatMapProps {
     onSeatSelect: (selectedSeats: Seat[]) => void
 }
 
-// Mock data generator for dynamic count (2-3 layout)
 const generateSeats = (count: number): Seat[] => {
     const seats: Seat[] = []
     for (let i = 0; i < count; i++) {
-        const isOccupied = Math.random() < 0.3
-        const isReserved = !isOccupied && Math.random() < 0.05
-        const gender = isOccupied ? (Math.random() < 0.5 ? 'male' : 'female') : undefined
+        const seed = (i + 1) * 17 + count * 13
+        const isOccupied = seed % 10 < 3
+        const isReserved = !isOccupied && seed % 23 === 0
+        const gender = isOccupied ? (seed % 2 === 0 ? 'male' : 'female') : undefined
 
         seats.push({
-            id: `seat-${i}`,
+            id: `seat-${count}-${i}`,
             number: (i + 1).toString(),
             status: isOccupied ? 'occupied' : (isReserved ? 'reserved' : 'available'),
             gender: gender,
@@ -37,35 +37,34 @@ const generateSeats = (count: number): Seat[] => {
 }
 
 export default function SeatMap({ totalSeats = 45, onSeatSelect }: SeatMapProps) {
-    const [seats, setSeats] = useState<Seat[]>(generateSeats(totalSeats))
-    const [selectedSeats, setSelectedSeats] = useState<Seat[]>([])
-
-    // Update seats if totalSeats changes
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    useEffect(() => {
-        setSeats(generateSeats(totalSeats))
-        setSelectedSeats([])
-    }, [totalSeats])
+    const baseSeats = useMemo(() => generateSeats(totalSeats), [totalSeats])
+    const [selectedSeatIds, setSelectedSeatIds] = useState<string[]>([])
+    const activeSelectedIds = selectedSeatIds.filter(id => baseSeats.some(seat => seat.id === id))
+    const seats = baseSeats.map(seat => (
+        activeSelectedIds.includes(seat.id) ? { ...seat, status: 'selected' as const } : seat
+    ))
 
     const handleSeatClick = (seat: Seat) => {
         if (seat.status === 'occupied' || seat.status === 'reserved') return
 
-        const isSelected = selectedSeats.some(s => s.id === seat.id)
-        let newSelected: Seat[]
+        const isSelected = activeSelectedIds.includes(seat.id)
+        let newSelectedIds: string[]
 
         if (isSelected) {
-            newSelected = selectedSeats.filter(s => s.id !== seat.id)
-            setSeats(seats.map(s => s.id === seat.id ? { ...s, status: 'available' } : s))
+            newSelectedIds = activeSelectedIds.filter(id => id !== seat.id)
         } else {
-            if (selectedSeats.length >= 5) {
+            if (activeSelectedIds.length >= 5) {
                 alert("You can only select up to 5 seats.")
                 return
             }
-            newSelected = [...selectedSeats, seat]
-            setSeats(seats.map(s => s.id === seat.id ? { ...s, status: 'selected' } : s))
+            newSelectedIds = [...activeSelectedIds, seat.id]
         }
 
-        setSelectedSeats(newSelected)
+        const newSelected = baseSeats
+            .filter(s => newSelectedIds.includes(s.id))
+            .map(s => ({ ...s, status: 'selected' as const }))
+
+        setSelectedSeatIds(newSelectedIds)
         onSeatSelect(newSelected)
     }
 

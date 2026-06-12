@@ -76,25 +76,21 @@ export default function BookingPage() {
     }
 
     const handleCheckout = async () => {
+        if (passengerDetails.some(passenger => !passenger.name.trim() || !passenger.phone.trim())) {
+            alert("Please enter each passenger's name and phone number before checkout.")
+            return
+        }
+
         setIsProcessing(true)
         try {
-            const res = await fetch('/api/checkout', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    tripId,
-                    seats: passengerDetails
-                })
-            })
-
-            const data = await res.json()
-            if (data.url) {
-                window.location.href = data.url
-            } else {
-                alert(data.error || "Checkout failed")
-            }
+            window.sessionStorage.setItem("rideway_checkout", JSON.stringify({
+                tripId,
+                seats: passengerDetails,
+            }))
+            router.push(`/checkout?tripId=${tripId}`)
         } catch (error) {
             console.error("Checkout error:", error)
+            alert("Unable to prepare checkout. Please try again.")
         } finally {
             setIsProcessing(false)
         }
@@ -304,7 +300,7 @@ export default function BookingPage() {
 
                                 <div className="pt-2">
                                     <p className="text-center text-[10px] text-slate-400 font-bold px-4 leading-relaxed uppercase tracking-widest opacity-60">
-                                        By confirming, you agree to our <br /> Terms of Service & Refund Policy
+                                        By confirming, you agree to our <br /> Terms of Service
                                     </p>
                                 </div>
                             </CardContent>

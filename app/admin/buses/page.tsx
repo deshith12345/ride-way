@@ -176,8 +176,9 @@ export default function BusFleetPage() {
                                 <div className="flex items-center gap-4">
                                     {newBus.images.length > 0 && (
                                         <div className="relative h-12 w-12 rounded overflow-hidden border">
-                                            <img src={newBus.images[0]} className="h-full w-full object-cover" />
+                                            <img src={newBus.images[0]} alt="Uploaded bus preview" className="h-full w-full object-cover" />
                                             <button
+                                                type="button"
                                                 onClick={() => setNewBus({ ...newBus, images: [] })}
                                                 className="absolute inset-0 bg-black/40 flex items-center justify-center text-white opacity-0 hover:opacity-100 transition-opacity"
                                             >

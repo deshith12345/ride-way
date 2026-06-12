@@ -137,7 +137,7 @@ export default async function Home() {
               {
                 step: "02",
                 title: "Select & Pay",
-                desc: "Choose your preferred seats and pay securely with Stripe-powered checkout.",
+                desc: "Choose your preferred seats and pay securely with Visa or Mastercard.",
                 color: "from-violet-600 to-violet-500",
                 shadow: "shadow-violet-200",
                 icon: (
@@ -215,7 +215,7 @@ export default async function Home() {
               },
               {
                 title: "Secure Payments",
-                desc: "Stripe-powered checkout with bank-grade encryption on every transaction.",
+                desc: "In-site Visa and Mastercard checkout with card validation on every booking.",
                 emoji: "🔒",
                 bg: "bg-emerald-50 hover:bg-emerald-100/80",
               },
@@ -367,83 +367,6 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════════════════════════
-          FOOTER
-      ═══════════════════════════════════════════════════════════════════ */}
-      <footer className="bg-slate-950 border-t border-white/5 py-16">
-        <div className="container mx-auto px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-12 mb-12">
-            {/* Brand */}
-            <div className="md:col-span-1">
-              <h3 className="text-2xl font-black text-white tracking-tight mb-3">
-                Ride<span className="text-blue-400">Way</span>
-              </h3>
-              <p className="text-sm text-slate-400 font-medium leading-relaxed">
-                Sri Lanka&apos;s modern bus booking platform. Travel smarter, travel better.
-              </p>
-            </div>
-
-            {/* Links */}
-            <div>
-              <h4 className="text-xs font-black text-slate-300 uppercase tracking-[0.2em] mb-5">
-                Travel
-              </h4>
-              <ul className="space-y-3">
-                {["Search Routes", "Popular Trips", "Bus Operators"].map((item) => (
-                  <li key={item}>
-                    <Link href="/routes" className="text-sm text-slate-500 hover:text-white transition-colors font-medium">
-                      {item}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="text-xs font-black text-slate-300 uppercase tracking-[0.2em] mb-5">
-                Account
-              </h4>
-              <ul className="space-y-3">
-                {["My Bookings", "Settings", "Manage Tickets"].map((item) => (
-                  <li key={item}>
-                    <Link href="/dashboard" className="text-sm text-slate-500 hover:text-white transition-colors font-medium">
-                      {item}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="text-xs font-black text-slate-300 uppercase tracking-[0.2em] mb-5">
-                Company
-              </h4>
-              <ul className="space-y-3">
-                {["About Us", "Contact", "Terms of Service", "Privacy Policy"].map((item) => (
-                  <li key={item}>
-                    <span className="text-sm text-slate-500 font-medium cursor-default">
-                      {item}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          <div className="border-t border-white/5 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-xs text-slate-600 font-medium">
-              &copy; {new Date().getFullYear()} RideWay. All rights reserved.
-            </p>
-            <div className="flex items-center gap-2 text-xs text-slate-600 font-medium">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-              All systems operational
-            </div>
-          </div>
-        </div>
-      </footer>
     </main>
   );
 }

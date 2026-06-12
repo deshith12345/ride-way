@@ -14,48 +14,18 @@ export default async function Header() {
                     <span className="text-2xl font-bold gradient-text group-hover:scale-105 transition-transform">
                         RideWay
                     </span>
-                    {session?.user?.role && (
-                        <span className="text-[10px] font-black uppercase tracking-tighter bg-blue-600 text-white px-1.5 py-0.5 rounded ml-1 animate-pulse shadow-sm">
-                            {session.user.role}
-                        </span>
-                    )}
                 </Link>
 
                 <nav className="hidden md:flex gap-8 items-center">
                     <Link href="/" className="text-sm font-medium transition-colors text-slate-700 hover:text-blue-600 hover:scale-105 transform">
                         Home
                     </Link>
-                    {session?.user?.role === "ADMIN" ? (
-                        <>
-                            <Link href="/admin/dashboard" className="text-sm font-medium transition-colors text-slate-700 hover:text-blue-600 hover:scale-105 transform">
-                                Fleet
-                            </Link>
-                            <Link href="/admin/schedules" className="text-sm font-medium transition-colors text-slate-700 hover:text-blue-600 hover:scale-105 transform">
-                                Schedules
-                            </Link>
-                            <Link href="/admin/routes" className="text-sm font-medium transition-colors text-slate-700 hover:text-blue-600 hover:scale-105 transform">
-                                Routes
-                            </Link>
-                        </>
-                    ) : session?.user?.role === "DRIVER" ? (
-                        <>
-                            <Link href="/driver/dashboard" className="text-sm font-medium transition-colors text-slate-700 hover:text-blue-600 hover:scale-105 transform">
-                                My Trips
-                            </Link>
-                            <Link href="/driver/scan" className="text-sm font-medium transition-colors text-slate-700 hover:text-blue-600 hover:scale-105 transform">
-                                Scan Tickets
-                            </Link>
-                        </>
-                    ) : (
-                        <>
-                            <Link href="/routes" className="text-sm font-medium transition-colors text-slate-700 hover:text-blue-600 hover:scale-105 transform">
-                                Routes
-                            </Link>
-                            <Link href="/track" className="text-sm font-medium transition-colors text-slate-700 hover:text-blue-600 hover:scale-105 transform">
-                                Track Bus
-                            </Link>
-                        </>
-                    )}
+                    <Link href="/routes" className="text-sm font-medium transition-colors text-slate-700 hover:text-blue-600 hover:scale-105 transform">
+                        Routes
+                    </Link>
+                    <Link href="/track" className="text-sm font-medium transition-colors text-slate-700 hover:text-blue-600 hover:scale-105 transform">
+                        Track Bus
+                    </Link>
                     <Link href="/help" className="text-sm font-medium transition-colors text-slate-700 hover:text-blue-600 hover:scale-105 transform">
                         Help
                     </Link>

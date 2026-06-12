@@ -7,11 +7,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { Settings, Globe, CreditCard, Shield, Bell, Database, CheckCircle2, XCircle } from "lucide-react"
+import { Globe, CreditCard, Shield, Bell, Database, CheckCircle2 } from "lucide-react"
 
 export default function AdminSettingsPage() {
-    const stripeConfigured = !!process.env.NEXT_PUBLIC_STRIPE_KEY
-
     return (
         <div className="space-y-8">
             <div>
@@ -84,12 +82,12 @@ export default function AdminSettingsPage() {
                             <div className="flex items-center gap-3">
                                 <CreditCard className="h-5 w-5 text-blue-600" />
                                 <div>
-                                    <p className="font-bold text-slate-900">Stripe</p>
-                                    <p className="text-xs text-slate-500">Payment Processing</p>
+                                    <p className="font-bold text-slate-900">Card Checkout</p>
+                                    <p className="text-xs text-slate-500">Visa / Mastercard</p>
                                 </div>
                             </div>
                             <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 font-bold">
-                                <CheckCircle2 className="h-3 w-3 mr-1" /> Configured
+                                <CheckCircle2 className="h-3 w-3 mr-1" /> Active
                             </Badge>
                         </div>
 
@@ -110,12 +108,12 @@ export default function AdminSettingsPage() {
                             <div className="flex items-center gap-3">
                                 <Globe className="h-5 w-5 text-amber-600" />
                                 <div>
-                                    <p className="font-bold text-slate-900">Cloudinary</p>
-                                    <p className="text-xs text-slate-500">Image Storage</p>
+                                    <p className="font-bold text-slate-900">Image Storage</p>
+                                    <p className="text-xs text-slate-500">Cloudinary uploads</p>
                                 </div>
                             </div>
-                            <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 font-bold">
-                                <CheckCircle2 className="h-3 w-3 mr-1" /> Connected
+                            <Badge variant="secondary" className="font-bold">
+                                Configure Env
                             </Badge>
                         </div>
                     </CardContent>
@@ -173,17 +171,17 @@ export default function AdminSettingsPage() {
                     <CardContent className="space-y-4 pt-6">
                         <div className="flex items-center justify-between">
                             <span className="text-sm font-medium text-slate-700">Email Notifications</span>
-                            <Badge variant="secondary" className="font-bold">Coming Soon</Badge>
+                            <Badge variant="secondary" className="font-bold">Enabled</Badge>
                         </div>
                         <Separator />
                         <div className="flex items-center justify-between">
                             <span className="text-sm font-medium text-slate-700">SMS Alerts</span>
-                            <Badge variant="secondary" className="font-bold">Coming Soon</Badge>
+                            <Badge variant="secondary" className="font-bold">Enabled</Badge>
                         </div>
                         <Separator />
                         <div className="flex items-center justify-between">
                             <span className="text-sm font-medium text-slate-700">Push Notifications</span>
-                            <Badge variant="secondary" className="font-bold">Coming Soon</Badge>
+                            <Badge variant="secondary" className="font-bold">Enabled</Badge>
                         </div>
                     </CardContent>
                 </Card>

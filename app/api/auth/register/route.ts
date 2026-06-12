@@ -9,8 +9,7 @@ const registerSchema = z.object({
     email: z.string().email("Invalid email address"),
     password: z.string().min(6, "Password must be at least 6 characters"),
     phone: z.string().optional(),
-    role: z.enum(["ADMIN", "DRIVER", "TRAVELLER"]).default("TRAVELLER"),
-    licenseNumber: z.string().optional(),
+    role: z.literal("TRAVELLER").default("TRAVELLER"),
 })
 
 export async function POST(req: NextRequest) {
@@ -32,14 +31,6 @@ export async function POST(req: NextRequest) {
             )
         }
 
-        // Validate driver-specific requirements
-        if (validatedData.role === "DRIVER" && !validatedData.licenseNumber) {
-            return NextResponse.json(
-                { error: "License number is required for drivers" },
-                { status: 400 }
-            )
-        }
-
         // Hash password
         const hashedPassword = await bcrypt.hash(validatedData.password, 10)
 
@@ -50,15 +41,13 @@ export async function POST(req: NextRequest) {
                 email: validatedData.email,
                 password: hashedPassword,
                 phone: validatedData.phone,
-                role: validatedData.role as UserRole,
-                licenseNumber: validatedData.role === "DRIVER" ? validatedData.licenseNumber : undefined,
+                role: UserRole.TRAVELLER,
             },
             select: {
                 id: true,
                 name: true,
                 email: true,
                 role: true,
-                licenseNumber: true,
                 createdAt: true,
             },
         })
