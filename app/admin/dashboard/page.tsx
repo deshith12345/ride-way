@@ -6,21 +6,12 @@ import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
 import { Button } from "@/components/ui/button"
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Cell } from "recharts"
-import { Bus, CalendarCheck, DollarSign, Users, TrendingUp, ArrowUpRight, Loader2 } from "lucide-react"
-
-const data = [
-    { name: "Mon", total: 12000 },
-    { name: "Tue", total: 18000 },
-    { name: "Wed", total: 15000 },
-    { name: "Thu", total: 21000 },
-    { name: "Fri", total: 28000 },
-    { name: "Sat", total: 32000 },
-    { name: "Sun", total: 25000 },
-]
+import { Bus, CalendarCheck, DollarSign, Users, BarChart3, ArrowUpRight, Loader2 } from "lucide-react"
 
 export default function AdminDashboard() {
     const [stats, setStats] = useState<any[]>([])
     const [activities, setActivities] = useState<any[]>([])
+    const [revenueByDay, setRevenueByDay] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
@@ -30,6 +21,7 @@ export default function AdminDashboard() {
                 const data = await res.json()
                 if (data.stats) setStats(data.stats)
                 if (data.activity) setActivities(data.activity)
+                if (data.revenueByDay) setRevenueByDay(data.revenueByDay)
             } catch (err) {
                 console.error("Failed to fetch stats:", err)
             } finally {
@@ -81,8 +73,7 @@ export default function AdminDashboard() {
                             <CardContent>
                                 <div className="text-2xl font-bold text-slate-900">{item.value}</div>
                                 <div className="flex items-center gap-1 mt-1">
-                                    <span className={`text-xs font-bold ${item.trend.startsWith('+') ? 'text-emerald-600' : 'text-rose-600'}`}>{item.trend}</span>
-                                    <span className="text-xs text-slate-400">from last month</span>
+                                    <span className="text-xs font-bold text-slate-500">{item.trend}</span>
                                 </div>
                             </CardContent>
                         </Card>
@@ -96,15 +87,15 @@ export default function AdminDashboard() {
                     <CardHeader className="flex flex-row items-center justify-between pb-8">
                         <div>
                             <CardTitle className="text-lg font-bold text-slate-900">Revenue Overview</CardTitle>
-                            <CardDescription>Daily performance for the past week</CardDescription>
+                            <CardDescription>Paid booking revenue for the past 7 days</CardDescription>
                         </div>
-                        <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full text-sm font-bold">
-                            <TrendingUp className="h-4 w-4" /> 12% Growth
+                        <div className="flex items-center gap-2 text-blue-600 bg-blue-50 px-3 py-1 rounded-full text-sm font-bold">
+                            <BarChart3 className="h-4 w-4" /> Live totals
                         </div>
                     </CardHeader>
                     <CardContent className="pl-2">
                         <ResponsiveContainer width="100%" height={350}>
-                            <BarChart data={data}>
+                            <BarChart data={revenueByDay}>
                                 <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
                                 <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `LKR ${value / 1000}k`} />
                                 <Tooltip
@@ -112,8 +103,8 @@ export default function AdminDashboard() {
                                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                                 />
                                 <Bar dataKey="total" radius={[6, 6, 0, 0]}>
-                                    {data.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={index === 5 ? '#2563eb' : '#e2e8f0'} className="hover:fill-blue-400 transition-colors" />
+                                    {revenueByDay.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={entry.total > 0 ? '#2563eb' : '#e2e8f0'} className="hover:fill-blue-400 transition-colors" />
                                     ))}
                                 </Bar>
                             </BarChart>

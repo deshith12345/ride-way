@@ -5,14 +5,36 @@ import { getPortalFromHost, getPortalUrl } from "@/lib/portal"
 
 const { auth } = NextAuth(authConfig)
 
+function matchesRoute(pathname: string, route: string) {
+    return pathname === route || pathname.startsWith(`${route}/`)
+}
+
 const proxy = auth((req) => {
     const { pathname } = req.nextUrl
     const portal = getPortalFromHost(req.headers.get("host"))
     const isLoggedIn = !!req.auth
     const userRole = req.auth?.user?.role?.toUpperCase()
 
-    const publicRoutes = ["/", "/about", "/contact", "/forgot-password", "/help", "/login", "/privacy", "/register", "/routes", "/search", "/terms", "/track"]
-    const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route))
+    const publicRoutes = [
+        "/",
+        "/about",
+        "/api/auth",
+        "/api/locations",
+        "/api/routes",
+        "/api/stats",
+        "/api/trips",
+        "/contact",
+        "/forgot-password",
+        "/help",
+        "/login",
+        "/privacy",
+        "/register",
+        "/routes",
+        "/search",
+        "/terms",
+        "/track",
+    ]
+    const isPublicRoute = publicRoutes.some(route => matchesRoute(pathname, route))
 
     const authRoutes = ["/login", "/register"]
     const isAuthRoute = authRoutes.includes(pathname)
@@ -60,6 +82,10 @@ const proxy = auth((req) => {
     }
 
     if (!isPublicRoute && !isLoggedIn) {
+        if (pathname.startsWith("/api")) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+        }
+
         const loginUrl = new URL("/login", req.url)
         loginUrl.searchParams.set("callbackUrl", `${pathname}${req.nextUrl.search}`)
         return NextResponse.redirect(loginUrl)

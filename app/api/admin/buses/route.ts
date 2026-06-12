@@ -31,15 +31,20 @@ export async function POST(req: Request) {
 
         const body = await req.json();
         const { registrationNo, number, type, totalSeats, amenities, images } = body;
+        const parsedSeatCount = Number(totalSeats);
+
+        if (!registrationNo || !number || !type || !Number.isInteger(parsedSeatCount) || parsedSeatCount < 1 || parsedSeatCount > 80) {
+            return NextResponse.json({ error: 'Invalid bus details' }, { status: 400 });
+        }
 
         const bus = await prisma.bus.create({
             data: {
                 registrationNo,
                 number,
                 type,
-                totalSeats: parseInt(totalSeats),
-                amenities: amenities || [],
-                images: images || [],
+                totalSeats: parsedSeatCount,
+                amenities: Array.isArray(amenities) ? amenities : [],
+                images: Array.isArray(images) ? images : [],
             },
         });
 

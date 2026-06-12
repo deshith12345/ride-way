@@ -9,13 +9,27 @@ export async function GET() {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const [userCount, busCount, bookingCount, revenueResult, recentBookings, recentTrips] = await Promise.all([
+        const weekStart = new Date();
+        weekStart.setDate(weekStart.getDate() - 6);
+        weekStart.setHours(0, 0, 0, 0);
+
+        const [userCount, busCount, bookingCount, revenueResult, weeklyBookings, recentBookings, recentTrips] = await Promise.all([
             prisma.user.count(),
             prisma.bus.count(),
             prisma.booking.count(),
             prisma.booking.aggregate({
                 _sum: {
                     totalAmount: true
+                }
+            }),
+            prisma.booking.findMany({
+                where: {
+                    createdAt: { gte: weekStart },
+                    paymentStatus: 'PAID'
+                },
+                select: {
+                    totalAmount: true,
+                    createdAt: true
                 }
             }),
             prisma.booking.findMany({
@@ -42,11 +56,24 @@ export async function GET() {
             })
         ]);
 
+        const revenueByDay = Array.from({ length: 7 }, (_, index) => {
+            const date = new Date(weekStart);
+            date.setDate(weekStart.getDate() + index);
+            const total = weeklyBookings
+                .filter((booking) => booking.createdAt.toDateString() === date.toDateString())
+                .reduce((sum, booking) => sum + booking.totalAmount, 0);
+
+            return {
+                name: date.toLocaleDateString('en-US', { weekday: 'short' }),
+                total
+            };
+        });
+
         const stats = [
-            { title: "Total Revenue", value: `LKR ${(revenueResult._sum.totalAmount || 0).toLocaleString()}`, trend: "+12.5%", icon: "DollarSign", color: "text-blue-600", bg: "bg-blue-50" },
-            { title: "Active Bookings", value: bookingCount.toLocaleString(), trend: "+5.1%", icon: "CalendarCheck", color: "text-emerald-600", bg: "bg-emerald-50" },
-            { title: "Active Buses", value: busCount.toLocaleString(), trend: "+2 this week", icon: "Bus", color: "text-amber-600", bg: "bg-amber-50" },
-            { title: "Total Users", value: userCount.toLocaleString(), trend: "+10.2%", icon: "Users", color: "text-indigo-600", bg: "bg-indigo-50" }
+            { title: "Total Revenue", value: `LKR ${(revenueResult._sum.totalAmount || 0).toLocaleString()}`, trend: "Live data", icon: "DollarSign", color: "text-blue-600", bg: "bg-blue-50" },
+            { title: "Bookings", value: bookingCount.toLocaleString(), trend: "Live data", icon: "CalendarCheck", color: "text-emerald-600", bg: "bg-emerald-50" },
+            { title: "Buses", value: busCount.toLocaleString(), trend: "Live data", icon: "Bus", color: "text-amber-600", bg: "bg-amber-50" },
+            { title: "Users", value: userCount.toLocaleString(), trend: "Live data", icon: "Users", color: "text-indigo-600", bg: "bg-indigo-50" }
         ];
 
         const activities = [
@@ -64,7 +91,7 @@ export async function GET() {
             }))
         ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 6);
 
-        return NextResponse.json({ stats, activity: activities });
+        return NextResponse.json({ stats, activity: activities, revenueByDay });
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }

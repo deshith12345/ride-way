@@ -32,6 +32,7 @@ export const authConfig = {
     },
     session: { strategy: "jwt" },
     secret: process.env.NEXTAUTH_SECRET,
+    trustHost: true,
     callbacks: {
         authorized({ auth, request: { nextUrl } }) {
             return true

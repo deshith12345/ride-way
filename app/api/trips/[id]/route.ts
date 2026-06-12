@@ -1,6 +1,7 @@
 
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { auth } from '@/auth';
 
 export async function GET(
     req: Request,
@@ -32,8 +33,30 @@ export async function PATCH(
     props: { params: Promise<{ id: string }> }
 ) {
     try {
+        const session = await auth();
+        if (!session?.user || !['ADMIN', 'DRIVER'].includes(session.user.role)) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         const { id: tripId } = await props.params;
         const { status } = await req.json();
+
+        if (!['SCHEDULED', 'BOARDING', 'DEPARTED', 'IN_TRANSIT', 'ARRIVED', 'COMPLETED', 'CANCELLED', 'DELAYED'].includes(status)) {
+            return NextResponse.json({ error: 'Invalid trip status' }, { status: 400 });
+        }
+
+        const trip = await prisma.trip.findUnique({
+            where: { id: tripId },
+            select: { driverId: true },
+        });
+
+        if (!trip) {
+            return NextResponse.json({ error: 'Trip not found' }, { status: 404 });
+        }
+
+        if (session.user.role === 'DRIVER' && trip.driverId !== session.user.id) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
 
         const updatedTrip = await prisma.trip.update({
             where: { id: tripId },

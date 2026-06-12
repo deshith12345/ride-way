@@ -6,6 +6,11 @@ import { auth } from '@/auth';
 // GET all trips
 export async function GET(req: Request) {
     try {
+        const session = await auth();
+        if (!session?.user || session.user.role !== 'ADMIN') {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         const trips = await prisma.trip.findMany({
             include: {
                 bus: true,
@@ -33,6 +38,10 @@ export async function POST(req: Request) {
 
         const body = await req.json();
         const { routeId, busId, driverId, departureTime, arrivalTime, basePrice } = body;
+
+        if (!routeId || !busId || !departureTime || !arrivalTime || Number.isNaN(Number(basePrice))) {
+            return NextResponse.json({ error: 'Invalid trip details' }, { status: 400 });
+        }
 
         const trip = await prisma.trip.create({
             data: {

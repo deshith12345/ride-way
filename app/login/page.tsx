@@ -29,6 +29,17 @@ function LoginContent() {
 
     const registered = searchParams.get("registered")
 
+    function getSafeCallbackUrl(role?: string | null) {
+        const callbackUrl = searchParams.get("callbackUrl")
+        if (!callbackUrl?.startsWith("/") || callbackUrl.startsWith("//")) return null
+
+        const normalizedRole = role?.toUpperCase()
+        if (callbackUrl.startsWith("/admin") && normalizedRole !== "ADMIN") return null
+        if (callbackUrl.startsWith("/driver") && normalizedRole !== "DRIVER") return null
+
+        return callbackUrl
+    }
+
     useEffect(() => {
         getProviders().then((providers) => {
             setGoogleEnabled(Boolean(providers?.google))
@@ -60,9 +71,9 @@ function LoginContent() {
 
             router.refresh()
 
-            const callbackUrl = searchParams.get("callbackUrl")
-            if (callbackUrl) {
-                router.push(callbackUrl)
+            const safeCallbackUrl = getSafeCallbackUrl(role)
+            if (safeCallbackUrl) {
+                router.push(safeCallbackUrl)
             } else {
                 window.location.href = getPortalUrl(role, window.location.href).toString()
             }
@@ -182,7 +193,7 @@ function LoginContent() {
                             variant="outline"
                             className="w-full h-12 rounded-xl border-white/50 bg-white/20 hover:bg-white/40 text-slate-600 font-bold transition-all border shadow-sm"
                             disabled={!googleEnabled}
-                            onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+                            onClick={() => signIn("google", { callbackUrl: getSafeCallbackUrl("TRAVELLER") || "/dashboard" })}
                         >
                             <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" className="w-5 h-5 mr-3" alt="Google" />
                             {googleEnabled ? "Continue with Google" : "Google sign-in unavailable"}

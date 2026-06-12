@@ -40,7 +40,7 @@ function DriverDashboard() {
             const res = await fetch(`/api/trips/${data.activeTrip.id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: 'ON_ROUTE' })
+                body: JSON.stringify({ status: 'DEPARTED' })
             })
             if (res.ok) {
                 await fetchStats()
@@ -130,10 +130,10 @@ function DriverDashboard() {
                                 <Button
                                     className="gradient-primary text-white h-14 rounded-2xl text-lg font-bold shadow-lg hover:shadow-2xl transition-all"
                                     onClick={handleStartTrip}
-                                    disabled={actionLoading || data.activeTrip.status === 'ON_ROUTE'}
+                                    disabled={actionLoading || data.activeTrip.status === 'DEPARTED'}
                                 >
                                     {actionLoading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Navigation className="mr-2 h-5 w-5" />}
-                                    {data.activeTrip.status === 'ON_ROUTE' ? 'Trip Started' : 'Start Trip'}
+                                    {data.activeTrip.status === 'DEPARTED' ? 'Trip Started' : 'Start Trip'}
                                 </Button>
                                 <div className="grid grid-cols-2 gap-3">
                                     <Link href="/driver/scan" className="w-full">
@@ -200,13 +200,13 @@ function DriverDashboard() {
                         <Card className="soft-shadow border-slate-100 overflow-hidden">
                             <div className="p-6 space-y-6">
                                 <div className="flex justify-between items-center">
-                                    <div className="text-sm font-bold text-slate-500 uppercase tracking-widest">DRIVING SCORE</div>
-                                    <span className="text-emerald-600 font-black text-xl">{data?.performance?.score || 100}/100</span>
+                                    <div className="text-sm font-bold text-slate-500 uppercase tracking-widest">COMPLETION RATE</div>
+                                    <span className="text-emerald-600 font-black text-xl">{data?.performance?.score ?? 0}%</span>
                                 </div>
                                 <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                                    <div className="h-full bg-emerald-500" style={{ width: `${data?.performance?.score || 100}%` }}></div>
+                                    <div className="h-full bg-emerald-500" style={{ width: `${data?.performance?.score ?? 0}%` }}></div>
                                 </div>
-                                <p className="text-sm text-slate-500 leading-relaxed font-medium">Excellent! You've maintained a perfect record of on-time departures this month.</p>
+                                <p className="text-sm text-slate-500 leading-relaxed font-medium">Completion rate is calculated from your assigned trips that are marked completed.</p>
                             </div>
                             <div className="bg-slate-50 p-6 grid grid-cols-2 gap-4">
                                 <div>
@@ -214,8 +214,8 @@ function DriverDashboard() {
                                     <div className="text-2xl font-bold text-slate-900">{data?.performance?.totalTrips || 0}</div>
                                 </div>
                                 <div>
-                                    <div className="text-xs font-bold text-slate-400">RATING</div>
-                                    <div className="text-2xl font-bold text-slate-900">{data?.performance?.rating?.toFixed(2) || "5.00"} ★</div>
+                                    <div className="text-xs font-bold text-slate-400">COMPLETED</div>
+                                    <div className="text-2xl font-bold text-slate-900">{data?.performance?.completedTrips || 0}</div>
                                 </div>
                             </div>
                         </Card>

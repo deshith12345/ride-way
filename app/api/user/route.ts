@@ -1,6 +1,12 @@
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server"
+import { z } from "zod"
+
+const updateProfileSchema = z.object({
+    name: z.string().trim().min(2).max(80).optional(),
+    phone: z.string().trim().min(7).max(20).optional(),
+})
 
 export async function PATCH(req: Request) {
     try {
@@ -13,7 +19,16 @@ export async function PATCH(req: Request) {
             )
         }
 
-        const { name, phone } = await req.json()
+        const parsed = updateProfileSchema.safeParse(await req.json())
+
+        if (!parsed.success) {
+            return NextResponse.json(
+                { error: "Invalid profile data" },
+                { status: 400 }
+            )
+        }
+
+        const { name, phone } = parsed.data
 
         const updateData: any = {}
         if (name !== undefined) updateData.name = name

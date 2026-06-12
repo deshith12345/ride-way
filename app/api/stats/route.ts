@@ -3,15 +3,16 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET() {
     try {
-        const [userCount, routeCount] = await Promise.all([
+        const [userCount, routeCount, tripCount] = await Promise.all([
             prisma.user.count({ where: { role: 'TRAVELLER' } }),
-            prisma.route.count()
+            prisma.route.count(),
+            prisma.trip.count({ where: { status: 'SCHEDULED', departureTime: { gte: new Date() } } })
         ]);
 
         return NextResponse.json({
-            travelers: userCount + 50000, // baseline + actual
+            travelers: userCount,
             routes: routeCount,
-            rating: "4.9"
+            scheduledTrips: tripCount
         });
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });

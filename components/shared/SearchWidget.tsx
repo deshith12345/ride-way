@@ -67,8 +67,8 @@ export default function SearchWidget() {
     }
 
     return (
-        <Card className="w-full max-w-4xl soft-shadow-lg border-slate-200 bg-white mx-auto">
-            <CardContent className="p-6">
+        <Card className="w-full max-w-5xl border-0 bg-transparent shadow-none mx-auto py-0">
+            <CardContent className="p-3 sm:p-4">
                 <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
 
                     {/* Origin */}
@@ -81,7 +81,7 @@ export default function SearchWidget() {
                                     variant="outline"
                                     role="combobox"
                                     aria-expanded={openOrigin}
-                                    className="w-full justify-between border-slate-300 hover:border-blue-400 h-11"
+                                    className="w-full justify-between rounded-2xl border-slate-200 bg-white hover:border-blue-400 h-12"
                                 >
                                     <div className="flex items-center truncate">
                                         <MapPin className="mr-2 h-4 w-4 text-blue-600" />
@@ -91,7 +91,7 @@ export default function SearchWidget() {
                                     </div>
                                 </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-[200px] p-0" align="start">
+                            <PopoverContent className="w-[220px] overflow-hidden rounded-2xl p-0" align="start">
                                 <Command>
                                     <CommandInput placeholder="Search city..." />
                                     <CommandList>
@@ -126,7 +126,7 @@ export default function SearchWidget() {
                                     variant="outline"
                                     role="combobox"
                                     aria-expanded={openDest}
-                                    className="w-full justify-between border-slate-300 hover:border-blue-400 h-11"
+                                    className="w-full justify-between rounded-2xl border-slate-200 bg-white hover:border-blue-400 h-12"
                                 >
                                     <div className="flex items-center truncate">
                                         <MapPin className="mr-2 h-4 w-4 text-blue-600" />
@@ -136,7 +136,7 @@ export default function SearchWidget() {
                                     </div>
                                 </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-[200px] p-0" align="start">
+                            <PopoverContent className="w-[220px] overflow-hidden rounded-2xl p-0" align="start">
                                 <Command>
                                     <CommandInput placeholder="Search city..." />
                                     <CommandList>
@@ -166,7 +166,7 @@ export default function SearchWidget() {
                         <label className="text-sm font-medium text-slate-700 ml-1">Date</label>
                         <Input
                             type="date"
-                            className="w-full justify-start text-left font-normal border-slate-300 hover:border-blue-400 h-11"
+                            className="w-full justify-start rounded-2xl border-slate-200 bg-white text-left font-normal hover:border-blue-400 h-12"
                             onChange={(e) => setDate(e.target.value)}
                         />
                     </div>
@@ -175,7 +175,7 @@ export default function SearchWidget() {
                     <div className="md:col-span-2 space-y-2 text-left">
                         <label className="text-sm font-medium text-slate-700 ml-1">Seats</label>
                         <Select defaultValue="1">
-                            <SelectTrigger className="border-slate-300 hover:border-blue-400 h-11">
+                            <SelectTrigger className="rounded-2xl border-slate-200 bg-white hover:border-blue-400 h-12">
                                 <SelectValue placeholder="Seats" />
                             </SelectTrigger>
                             <SelectContent>
@@ -188,7 +188,7 @@ export default function SearchWidget() {
 
                     {/* Submit */}
                     <div className="md:col-span-1">
-                        <Button className="w-full gradient-primary text-white hover:shadow-lg transition-all h-11" type="submit">
+                        <Button className="w-full rounded-2xl gradient-primary text-white hover:shadow-lg transition-all h-12" type="submit">
                             <Search className="h-5 w-5" />
                         </Button>
                     </div>

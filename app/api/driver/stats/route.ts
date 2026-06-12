@@ -31,12 +31,15 @@ export async function GET() {
 
         const activeTrip = trips[0] || null;
         const upcomingTrips = trips.slice(1);
+        const totalTrips = await prisma.trip.count({ where: { driverId } });
+        const completedTrips = await prisma.trip.count({ where: { driverId, status: 'COMPLETED' } });
+        const completionRate = totalTrips > 0 ? Math.round((completedTrips / totalTrips) * 100) : 0;
 
-        // Performance stats (mocked for now but could be based on actual data)
         const performance = {
-            score: 98,
-            totalTrips: await prisma.trip.count({ where: { driverId } }),
-            rating: 4.9,
+            score: completionRate,
+            totalTrips,
+            completedTrips,
+            completionRate,
             busNo: activeTrip?.bus?.registrationNo || "Not Assigned",
             busType: activeTrip?.bus?.type || "N/A"
         };

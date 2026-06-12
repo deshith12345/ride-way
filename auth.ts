@@ -75,7 +75,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           })
 
           if (existingUser) {
-            user.role = existingUser.role
+            user.role = UserRole.TRAVELLER
             user.id = existingUser.id
           } else {
             const newUser = await prisma.user.create({
