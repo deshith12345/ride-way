@@ -1,5 +1,4 @@
 import NextAuth from "next-auth"
-import GoogleProvider from "next-auth/providers/google"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { authConfig } from "./auth.config"
 import { prisma } from "@/lib/prisma"
@@ -7,26 +6,16 @@ import bcrypt from "bcryptjs"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import { UserRole } from "@prisma/client"
 import type { Provider } from "next-auth/providers"
-
-const googleClientId = process.env.GOOGLE_CLIENT_ID || process.env.AUTH_GOOGLE_ID
-const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET || process.env.AUTH_GOOGLE_SECRET
+import { getGoogleProvider } from "@/lib/auth-providers"
 
 const providers: Provider[] = []
+const googleProvider = getGoogleProvider()
 
-if (googleClientId && googleClientSecret) {
-  providers.push(
-    GoogleProvider({
-      clientId: googleClientId,
-      clientSecret: googleClientSecret,
-      allowDangerousEmailAccountLinking: true,
-    })
-  )
+if (googleProvider) {
+  providers.push(googleProvider)
 }
 
-const otherProviders = authConfig.providers.filter(p => p.id !== "credentials" && p.id !== "google")
-
 providers.push(
-  ...otherProviders,
   CredentialsProvider({
     id: "credentials",
     name: "credentials",

@@ -1,21 +1,13 @@
 
 import type { NextAuthConfig } from "next-auth"
-import GoogleProvider from "next-auth/providers/google"
 import CredentialsProvider from "next-auth/providers/credentials"
-
-const googleClientId = process.env.GOOGLE_CLIENT_ID || process.env.AUTH_GOOGLE_ID
-const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET || process.env.AUTH_GOOGLE_SECRET
+import { getGoogleProvider } from "@/lib/auth-providers"
 
 const providers = []
+const googleProvider = getGoogleProvider()
 
-if (googleClientId && googleClientSecret) {
-    providers.push(
-        GoogleProvider({
-            clientId: googleClientId,
-            clientSecret: googleClientSecret,
-            allowDangerousEmailAccountLinking: true,
-        })
-    )
+if (googleProvider) {
+    providers.push(googleProvider)
 }
 
 providers.push(
