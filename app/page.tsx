@@ -106,21 +106,22 @@ export default async function Home() {
     <main className="flex min-h-screen flex-col overflow-hidden bg-white">
       <section className="relative overflow-hidden bg-slate-950 py-20 md:py-28">
         <BackgroundSlider images={heroWallpapers} interval={6500} className="z-0" />
-        <div className="absolute inset-0 z-10 bg-[linear-gradient(115deg,rgba(2,6,23,0.9),rgba(15,23,42,0.72),rgba(15,23,42,0.42))]" />
-        <div className="absolute inset-x-0 bottom-0 z-10 h-24 bg-gradient-to-t from-slate-950/55 to-transparent" />
+        <div className="absolute inset-0 z-10 bg-[linear-gradient(115deg,rgba(2,6,23,0.48),rgba(15,23,42,0.26),rgba(15,23,42,0.04))]" />
+        <div className="absolute inset-y-16 inset-x-0 z-10 bg-[linear-gradient(90deg,rgba(2,6,23,0),rgba(2,6,23,0.68)_30%,rgba(2,6,23,0.76)_50%,rgba(2,6,23,0.68)_70%,rgba(2,6,23,0))]" />
+        <div className="absolute inset-x-0 bottom-0 z-10 h-24 bg-gradient-to-t from-slate-950/35 to-transparent" />
         <div className="container relative z-20 mx-auto px-4">
           <div className="flex flex-col items-center text-center">
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/15 px-4 py-1.5 shadow-xl shadow-slate-950/20 backdrop-blur-xl">
               <Navigation className="h-4 w-4 text-cyan-200" />
               <span className="text-sm font-medium text-white">Smart Bus Travel in Sri Lanka</span>
             </div>
-            <h1 className="max-w-4xl text-4xl font-bold tracking-tight text-white drop-shadow-2xl md:text-6xl lg:text-7xl">
+            <h1 className="max-w-4xl text-4xl font-bold tracking-tight text-white drop-shadow-[0_6px_26px_rgba(2,6,23,0.95)] md:text-6xl lg:text-7xl">
               Book Bus Tickets{" "}
               <span className="gradient-text">Instantly</span>
               <br />
               Travel Seamlessly
             </h1>
-            <p className="mt-6 max-w-2xl text-lg font-medium leading-8 text-slate-100">
+            <p className="mt-6 max-w-2xl text-lg font-semibold leading-8 text-white drop-shadow-[0_3px_18px_rgba(2,6,23,0.95)]">
               RideWay connects travellers to published bus routes across Sri Lanka.
               Browse trips, reserve seats, and board with digital tickets - no queues, no hassle.
             </p>
