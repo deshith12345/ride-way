@@ -1,20 +1,20 @@
 import Link from "next/link"
 import {
   ArrowRight,
-  BadgeCheck,
   Bus,
-  CalendarCheck,
+  Clock3,
   CreditCard,
   MapPinned,
+  Navigation,
   QrCode,
-  Route,
   ShieldCheck,
+  TicketCheck,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { prisma } from "@/lib/prisma"
 
 function formatDuration(minutes?: number | null) {
-  if (!minutes) return "Schedule pending"
+  if (!minutes) return "Time pending"
 
   const hours = Math.floor(minutes / 60)
   const mins = minutes % 60
@@ -24,35 +24,37 @@ function formatDuration(minutes?: number | null) {
 }
 
 function formatFare(amount?: number | null) {
-  if (amount === null || amount === undefined) return "Fare updates soon"
-  return `From LKR ${Math.round(amount).toLocaleString()}`
+  if (amount === null || amount === undefined) return "Fare pending"
+  return `LKR ${Math.round(amount).toLocaleString()} starting fare`
 }
 
-const bookingSteps = [
+function formatPlace(value: string) {
+  return value
+    .split(" ")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ")
+}
+
+const featureTiles = [
   {
-    title: "Search",
-    text: "Browse published routes and choose the trip that fits your day.",
-    icon: Route,
+    title: "Account-protected booking",
+    text: "Travellers browse freely, then sign in before reserving and paying.",
+    icon: ShieldCheck,
     tone: "bg-blue-50 text-blue-700",
   },
   {
-    title: "Reserve",
-    text: "Pick exact seats and confirm passenger details before checkout.",
-    icon: CalendarCheck,
+    title: "Card-ready checkout",
+    text: "Visa and Mastercard validation keeps payment flow direct and familiar.",
+    icon: CreditCard,
     tone: "bg-emerald-50 text-emerald-700",
   },
   {
-    title: "Board",
-    text: "Use the QR ticket on your phone when the driver checks boarding.",
+    title: "QR boarding",
+    text: "Digital tickets are built for quick driver verification at boarding.",
     icon: QrCode,
     tone: "bg-amber-50 text-amber-700",
   },
-]
-
-const trustItems = [
-  { label: "Visa / Mastercard", icon: CreditCard },
-  { label: "Protected booking", icon: ShieldCheck },
-  { label: "QR e-tickets", icon: BadgeCheck },
 ]
 
 export default async function Home() {
@@ -77,7 +79,7 @@ export default async function Home() {
       prisma.trip.count({ where: { status: "SCHEDULED", departureTime: { gte: now } } }),
       prisma.route.findMany({
         orderBy: { updatedAt: "desc" },
-        take: 3,
+        take: 4,
         select: {
           id: true,
           origin: true,
@@ -102,191 +104,200 @@ export default async function Home() {
     scheduledTripCount = scheduledTrips
     featuredRoutes = routeCards
   } catch (error) {
-    console.error("Home data unavailable:", error)
+    console.error("Failed to fetch homepage data:", error)
   }
 
-  const stats = [
-    { value: travellerCount.toLocaleString(), label: "Travellers" },
-    { value: routeCount.toLocaleString(), label: "Routes" },
-    { value: busCount.toLocaleString(), label: "Active buses" },
-    { value: scheduledTripCount.toLocaleString(), label: "Scheduled trips" },
-  ]
-
   return (
-    <main className="overflow-hidden bg-[#f6f8fb] text-slate-950">
-      <section
-        className="relative min-h-[calc(100svh-4rem)] overflow-hidden bg-slate-950 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('/bus-exterior-v2.jpg')" }}
-      >
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,0.22),rgba(2,6,23,0.72)_55%,rgba(246,248,251,0.98)_96%)]" />
-        <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#f6f8fb] via-[#f6f8fb]/80 to-transparent" />
-
-        <div className="container relative mx-auto flex min-h-[calc(100svh-4rem)] flex-col items-center justify-center px-4 py-16 text-center">
-          <div className="max-w-5xl text-white">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/35 bg-white/15 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] shadow-2xl shadow-slate-950/20 backdrop-blur-2xl">
-              <Bus className="h-4 w-4 text-white" />
-              Bus booking across Sri Lanka
+    <main className="flex min-h-screen flex-col overflow-hidden bg-white">
+      <section className="relative overflow-hidden bg-gradient-to-br from-white via-blue-50/40 to-white py-20 md:py-28">
+        <div className="absolute inset-0 bg-[radial-gradient(#dbeafe_1px,transparent_1px)] opacity-70 [background-size:24px_24px] [mask-image:radial-gradient(ellipse_at_center,white,transparent_72%)]" />
+        <div className="container relative mx-auto px-4">
+          <div className="flex flex-col items-center text-center">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-blue-200/50 bg-blue-100/80 px-4 py-1.5 shadow-sm backdrop-blur-sm">
+              <Navigation className="h-4 w-4 text-blue-600" />
+              <span className="text-sm font-medium text-blue-700">Smart Bus Travel in Sri Lanka</span>
             </div>
-            <h1 className="mx-auto max-w-4xl text-5xl font-black leading-[0.96] tracking-normal drop-shadow-2xl sm:text-6xl lg:text-7xl">
-              RideWay
+            <h1 className="max-w-4xl text-4xl font-bold tracking-tight text-slate-900 md:text-6xl lg:text-7xl">
+              Book Bus Tickets{" "}
+              <span className="gradient-text">Instantly</span>
+              <br />
+              Travel Seamlessly
             </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-lg font-medium leading-8 text-white/90 sm:text-xl">
-              Search routes, reserve seats, pay by card, and carry your QR ticket from one polished traveller dashboard.
+            <p className="mt-6 max-w-2xl text-lg text-slate-600">
+              RideWay connects travellers to published bus routes across Sri Lanka.
+              Browse trips, reserve seats, and board with digital tickets - no queues, no hassle.
+            </p>
+            <div className="mt-10 flex flex-wrap justify-center gap-4">
+              <Link href="/routes">
+                <Button size="lg" className="gradient-primary rounded-full px-8 text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl">
+                  Find your route
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+              <Link href="#how-it-works">
+                <Button size="lg" variant="outline" className="rounded-full border-2 px-8 hover:bg-blue-50">
+                  How it works
+                </Button>
+              </Link>
+            </div>
+            <div className="mt-16 flex flex-wrap justify-center gap-8 text-center md:text-left">
+              <div>
+                <p className="text-3xl font-bold text-blue-600">{travellerCount.toLocaleString()}</p>
+                <p className="text-sm text-slate-500">Travellers</p>
+              </div>
+              <div>
+                <p className="text-3xl font-bold text-blue-600">{routeCount.toLocaleString()}</p>
+                <p className="text-sm text-slate-500">Bus routes</p>
+              </div>
+              <div>
+                <p className="text-3xl font-bold text-blue-600">{busCount.toLocaleString()}</p>
+                <p className="text-sm text-slate-500">Active buses</p>
+              </div>
+              <div>
+                <p className="text-3xl font-bold text-blue-600">{scheduledTripCount.toLocaleString()}</p>
+                <p className="text-sm text-slate-500">Scheduled trips</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {featuredRoutes.length > 0 && (
+        <section className="bg-white py-20">
+          <div className="container mx-auto px-4">
+            <div className="mb-12 text-center">
+              <h2 className="text-3xl font-bold text-slate-900 md:text-4xl">Popular Routes</h2>
+              <p className="mx-auto mt-4 max-w-2xl text-slate-600">
+                Discover published routes from the RideWay schedule and move straight into available trips.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+              {featuredRoutes.map((route) => {
+                const nearestTrip = route.trips?.[0]
+                const departureTime = nearestTrip?.departureTime
+                const formattedDeparture = departureTime
+                  ? new Intl.DateTimeFormat("en-US", {
+                      hour: "numeric",
+                      minute: "numeric",
+                      hour12: true,
+                    }).format(new Date(departureTime))
+                  : "Check schedule"
+
+                return (
+                  <Link
+                    key={route.id}
+                    href={`/search?from=${encodeURIComponent(route.origin)}&to=${encodeURIComponent(route.destination)}`}
+                    className="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                  >
+                    <div className="p-6">
+                      <div className="mb-4 flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-sm text-slate-500">
+                          <Clock3 className="h-4 w-4" />
+                          <span>{formatDuration(route.estimatedDuration)}</span>
+                        </div>
+                        {nearestTrip && (
+                          <div className="rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-600">
+                            Next: {formattedDeparture}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center justify-between gap-4">
+                        <div>
+                          <p className="text-lg font-semibold text-slate-900">{formatPlace(route.origin)}</p>
+                        </div>
+                        <Bus className="h-5 w-5 shrink-0 text-blue-400" />
+                        <div className="text-right">
+                          <p className="text-lg font-semibold text-slate-900">{formatPlace(route.destination)}</p>
+                        </div>
+                      </div>
+                      <div className="mt-6 flex items-center justify-between border-t pt-4">
+                        <p className="text-sm font-semibold text-blue-600">{formatFare(nearestTrip?.basePrice)}</p>
+                        <span className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 transition-transform group-hover:translate-x-1">
+                          View trips <ArrowRight className="h-3 w-3" />
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      <section id="how-it-works" className="bg-gradient-to-b from-slate-50 to-white py-20">
+        <div className="container mx-auto px-4">
+          <div className="mb-12 text-center">
+            <h2 className="text-3xl font-bold text-slate-900 md:text-4xl">Book in Minutes</h2>
+            <p className="mx-auto mt-4 max-w-2xl text-slate-600">
+              A simple, secure, and fast way to book your bus tickets online.
             </p>
           </div>
-
-          <div className="mt-10 w-full max-w-4xl rounded-[2.25rem] border border-white/35 bg-white/88 p-4 shadow-2xl shadow-slate-950/25 backdrop-blur-2xl">
-            <div className="grid gap-4 rounded-[1.75rem] bg-white p-5 shadow-sm sm:grid-cols-[1fr_auto] sm:items-center">
-              <div className="text-left">
-                <p className="text-xs font-black uppercase tracking-[0.18em] text-blue-600">Start here</p>
-                <h2 className="mt-2 text-2xl font-black text-slate-950">Choose a route and book securely</h2>
-                <p className="mt-2 font-medium leading-7 text-slate-600">
-                  Browse available trips first. Booking opens after sign in, so every ticket stays connected to your account.
-                </p>
+          <div className="mx-auto grid max-w-5xl grid-cols-1 gap-8 md:grid-cols-3">
+            <div className="p-6 text-center">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-100 shadow-sm">
+                <MapPinned className="h-8 w-8 text-blue-600" />
               </div>
-              <div className="flex flex-col gap-3 sm:min-w-52">
-                <Button asChild className="h-12 rounded-full bg-blue-600 px-6 font-black text-white shadow-lg shadow-blue-200 hover:bg-blue-700">
-                  <Link href="/routes">
-                    Browse routes <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" className="h-12 rounded-full border-slate-200 bg-white px-6 font-black text-slate-700">
-                  <Link href="/track">Track bus</Link>
-                </Button>
+              <h3 className="text-xl font-semibold text-slate-900">1. Browse Routes</h3>
+              <p className="mt-2 text-slate-600">Open the route list and find published trips for your journey.</p>
+            </div>
+            <div className="p-6 text-center">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-100 shadow-sm">
+                <TicketCheck className="h-8 w-8 text-blue-600" />
               </div>
+              <h3 className="text-xl font-semibold text-slate-900">2. Select & Pay</h3>
+              <p className="mt-2 text-slate-600">Choose a trip, reserve your seat, and pay securely by card.</p>
+            </div>
+            <div className="p-6 text-center">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-100 shadow-sm">
+                <QrCode className="h-8 w-8 text-blue-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-slate-900">3. Board with QR</h3>
+              <p className="mt-2 text-slate-600">Show your QR code to the driver and enjoy a hassle-free journey.</p>
             </div>
           </div>
+        </div>
+      </section>
 
-          <div className="mt-6 flex flex-wrap justify-center gap-3">
-            {trustItems.map((item) => (
+      <section className="bg-white py-20">
+        <div className="container mx-auto px-4">
+          <div className="mb-12 text-center">
+            <h2 className="text-3xl font-bold text-slate-900 md:text-4xl">Why Travel with RideWay?</h2>
+            <p className="mx-auto mt-4 max-w-2xl text-slate-600">
+              RideWay keeps public route discovery clean while booking, payment, and tickets stay protected.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+            {featureTiles.map((feature) => (
               <div
-                key={item.label}
-                className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/15 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-slate-950/10 backdrop-blur-2xl"
+                key={feature.title}
+                className="group relative rounded-2xl border border-slate-100 bg-white p-8 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
               >
-                <item.icon className="h-4 w-4" />
-                {item.label}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="relative -mt-16 pb-8">
-        <div className="container mx-auto px-4">
-          <div className="grid gap-3 rounded-[2.25rem] border border-white/80 bg-white/84 p-3 shadow-xl shadow-slate-200/70 backdrop-blur-2xl md:grid-cols-4">
-            {stats.map((stat) => (
-              <div key={stat.label} className="rounded-[1.7rem] bg-white px-5 py-5 shadow-sm ring-1 ring-slate-100">
-                <p className="text-3xl font-black text-slate-950">{stat.value}</p>
-                <p className="mt-1 text-xs font-black uppercase tracking-[0.15em] text-slate-500">{stat.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="py-12">
-        <div className="container mx-auto px-4">
-          <div className="rounded-[2.5rem] border border-white bg-white/76 p-6 shadow-xl shadow-slate-200/60 backdrop-blur-xl sm:p-8">
-            <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-              <div>
-                <p className="text-xs font-black uppercase tracking-[0.2em] text-blue-600">Live schedule</p>
-                <h2 className="mt-3 max-w-2xl text-3xl font-black tracking-normal text-slate-950 sm:text-4xl">
-                  Routes published from your system.
-                </h2>
-              </div>
-              <Button asChild variant="outline" className="h-12 rounded-full border-slate-200 bg-white px-6 font-black shadow-sm">
-                <Link href="/routes">
-                  View all routes <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
-
-            {featuredRoutes.length > 0 ? (
-              <div className="mt-8 grid gap-4 md:grid-cols-3">
-                {featuredRoutes.map((route) => {
-                  const nextTrip = route.trips[0]
-
-                  return (
-                    <Link
-                      key={route.id}
-                      href={`/search?from=${encodeURIComponent(route.origin)}&to=${encodeURIComponent(route.destination)}`}
-                      className="group rounded-[2rem] border border-slate-100 bg-[#f9fbff] p-6 shadow-sm transition hover:-translate-y-1 hover:bg-white hover:shadow-xl hover:shadow-blue-100/70"
-                    >
-                      <div className="mb-7 flex items-center justify-between">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-[1.25rem] bg-blue-100 text-blue-700">
-                          <Bus className="h-6 w-6" />
-                        </div>
-                        <ArrowRight className="h-5 w-5 text-slate-300 transition group-hover:translate-x-1 group-hover:text-blue-600" />
-                      </div>
-                      <h3 className="text-xl font-black text-slate-950">
-                        {route.origin} to {route.destination}
-                      </h3>
-                      <div className="mt-5 flex flex-wrap gap-2">
-                        <span className="rounded-full bg-white px-3 py-1 text-xs font-black uppercase tracking-[0.12em] text-slate-600 shadow-sm ring-1 ring-slate-100">
-                          {formatDuration(route.estimatedDuration)}
-                        </span>
-                        <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black uppercase tracking-[0.12em] text-emerald-700 ring-1 ring-emerald-100">
-                          {formatFare(nextTrip?.basePrice)}
-                        </span>
-                      </div>
-                      <p className="mt-5 text-sm font-medium leading-6 text-slate-500">
-                        {nextTrip
-                          ? `Next departure: ${nextTrip.departureTime.toLocaleDateString("en-LK", {
-                              month: "short",
-                              day: "numeric",
-                            })}`
-                          : "Trip times appear when schedules are published."}
-                      </p>
-                    </Link>
-                  )
-                })}
-              </div>
-            ) : (
-              <div className="mt-8 rounded-[2rem] border border-dashed border-slate-300 bg-[#f9fbff] p-8 text-center">
-                <p className="text-lg font-black text-slate-950">No routes published yet</p>
-                <p className="mx-auto mt-2 max-w-xl font-medium leading-7 text-slate-600">
-                  Add routes and schedules from the admin portal, and they will appear here automatically.
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
-      <section className="pb-12 pt-4">
-        <div className="container mx-auto px-4">
-          <div className="grid gap-4 md:grid-cols-3">
-            {bookingSteps.map((step) => (
-              <div key={step.title} className="rounded-[2rem] border border-white bg-white/78 p-6 shadow-lg shadow-slate-200/55 backdrop-blur-xl">
-                <div className={`mb-8 flex h-12 w-12 items-center justify-center rounded-[1.25rem] ${step.tone}`}>
-                  <step.icon className="h-6 w-6" />
+                <div className={`mb-4 inline-flex rounded-xl p-3 ${feature.tone}`}>
+                  <feature.icon className="h-6 w-6" />
                 </div>
-                <h3 className="text-xl font-black text-slate-950">{step.title}</h3>
-                <p className="mt-3 font-medium leading-7 text-slate-600">{step.text}</p>
+                <h3 className="mb-2 text-xl font-semibold text-slate-900">{feature.title}</h3>
+                <p className="text-slate-600">{feature.text}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="pb-20 pt-6">
+      <section className="py-20">
         <div className="container mx-auto px-4">
-          <div className="rounded-[2.5rem] border border-white bg-white/78 p-8 shadow-xl shadow-blue-100/50 backdrop-blur-xl sm:p-10">
-            <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
-              <div>
-                <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-600">Secure booking</p>
-                <h2 className="mt-3 max-w-3xl text-3xl font-black tracking-normal text-slate-950 sm:text-5xl">
-                  Guests can browse. Booking starts after sign in.
-                </h2>
-                <p className="mt-4 max-w-2xl font-medium leading-8 text-slate-600">
-                  Every paid booking is tied to a traveller account, with passenger details and tickets kept behind authentication.
-                </p>
-              </div>
-              <Button asChild className="h-12 rounded-full bg-blue-600 px-7 font-black text-white shadow-lg shadow-blue-200 hover:bg-blue-700">
-                <Link href="/routes">
-                  Browse routes <MapPinned className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
+          <div className="gradient-primary rounded-3xl p-10 text-center text-white shadow-xl md:p-16">
+            <h2 className="text-3xl font-bold md:text-4xl">Ready to hit the road?</h2>
+            <p className="mx-auto mt-4 max-w-2xl text-blue-100">
+              Create an account to keep your bookings, tickets, and traveller details together.
+            </p>
+            <div className="mt-8">
+              <Link href="/register">
+                <Button size="lg" variant="secondary" className="rounded-full bg-white px-8 text-blue-600 shadow-lg transition-all hover:scale-105 hover:bg-slate-100 hover:shadow-xl">
+                  Get Started
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
