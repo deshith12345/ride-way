@@ -107,23 +107,29 @@ export default async function Home() {
     console.error("Failed to fetch homepage data:", error)
   }
 
+  const marqueeRoutes = [...featuredRoutes, ...featuredRoutes]
+
   return (
     <main className="flex min-h-screen flex-col overflow-hidden bg-white">
-      <section className="relative overflow-hidden bg-gradient-to-br from-white via-blue-50/40 to-white py-20 md:py-28">
-        <div className="absolute inset-0 bg-[radial-gradient(#dbeafe_1px,transparent_1px)] opacity-70 [background-size:24px_24px] [mask-image:radial-gradient(ellipse_at_center,white,transparent_72%)]" />
+      <section
+        className="relative overflow-hidden bg-slate-950 bg-cover bg-center bg-no-repeat py-20 md:py-28"
+        style={{ backgroundImage: "url('/bus-exterior-v2.jpg')" }}
+      >
+        <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(2,6,23,0.9),rgba(15,23,42,0.74),rgba(15,23,42,0.34))]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(255,255,255,0.22),transparent_28%),radial-gradient(circle_at_85%_22%,rgba(14,165,233,0.22),transparent_25%)]" />
         <div className="container relative mx-auto px-4">
           <div className="flex flex-col items-center text-center">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-blue-200/50 bg-blue-100/80 px-4 py-1.5 shadow-sm backdrop-blur-sm">
-              <Navigation className="h-4 w-4 text-blue-600" />
-              <span className="text-sm font-medium text-blue-700">Smart Bus Travel in Sri Lanka</span>
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/15 px-4 py-1.5 shadow-xl shadow-slate-950/20 backdrop-blur-xl">
+              <Navigation className="h-4 w-4 text-cyan-200" />
+              <span className="text-sm font-medium text-white">Smart Bus Travel in Sri Lanka</span>
             </div>
-            <h1 className="max-w-4xl text-4xl font-bold tracking-tight text-slate-900 md:text-6xl lg:text-7xl">
+            <h1 className="max-w-4xl text-4xl font-bold tracking-tight text-white drop-shadow-2xl md:text-6xl lg:text-7xl">
               Book Bus Tickets{" "}
               <span className="gradient-text">Instantly</span>
               <br />
               Travel Seamlessly
             </h1>
-            <p className="mt-6 max-w-2xl text-lg text-slate-600">
+            <p className="mt-6 max-w-2xl text-lg font-medium leading-8 text-slate-100">
               RideWay connects travellers to published bus routes across Sri Lanka.
               Browse trips, reserve seats, and board with digital tickets - no queues, no hassle.
             </p>
@@ -135,27 +141,27 @@ export default async function Home() {
                 </Button>
               </Link>
               <Link href="#how-it-works">
-                <Button size="lg" variant="outline" className="rounded-full border-2 px-8 hover:bg-blue-50">
+                <Button size="lg" variant="outline" className="rounded-full border-2 border-white/35 bg-white/10 px-8 text-white backdrop-blur-xl hover:bg-white/20 hover:text-white">
                   How it works
                 </Button>
               </Link>
             </div>
             <div className="mt-16 flex flex-wrap justify-center gap-8 text-center md:text-left">
               <div>
-                <p className="text-3xl font-bold text-blue-600">{travellerCount.toLocaleString()}</p>
-                <p className="text-sm text-slate-500">Travellers</p>
+                <p className="text-3xl font-bold text-white">{travellerCount.toLocaleString()}</p>
+                <p className="text-sm text-slate-200">Travellers</p>
               </div>
               <div>
-                <p className="text-3xl font-bold text-blue-600">{routeCount.toLocaleString()}</p>
-                <p className="text-sm text-slate-500">Bus routes</p>
+                <p className="text-3xl font-bold text-white">{routeCount.toLocaleString()}</p>
+                <p className="text-sm text-slate-200">Bus routes</p>
               </div>
               <div>
-                <p className="text-3xl font-bold text-blue-600">{busCount.toLocaleString()}</p>
-                <p className="text-sm text-slate-500">Active buses</p>
+                <p className="text-3xl font-bold text-white">{busCount.toLocaleString()}</p>
+                <p className="text-sm text-slate-200">Active buses</p>
               </div>
               <div>
-                <p className="text-3xl font-bold text-blue-600">{scheduledTripCount.toLocaleString()}</p>
-                <p className="text-sm text-slate-500">Scheduled trips</p>
+                <p className="text-3xl font-bold text-white">{scheduledTripCount.toLocaleString()}</p>
+                <p className="text-sm text-slate-200">Scheduled trips</p>
               </div>
             </div>
           </div>
@@ -171,8 +177,11 @@ export default async function Home() {
                 Discover published routes from the RideWay schedule and move straight into available trips.
               </p>
             </div>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-              {featuredRoutes.map((route) => {
+            <div className="relative overflow-hidden">
+              <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-white to-transparent" />
+              <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-white to-transparent" />
+              <div className="flex w-max gap-6 animate-route-marquee">
+              {marqueeRoutes.map((route, index) => {
                 const nearestTrip = route.trips?.[0]
                 const departureTime = nearestTrip?.departureTime
                 const formattedDeparture = departureTime
@@ -185,9 +194,9 @@ export default async function Home() {
 
                 return (
                   <Link
-                    key={route.id}
+                    key={`${route.id}-${index}`}
                     href={`/search?from=${encodeURIComponent(route.origin)}&to=${encodeURIComponent(route.destination)}`}
-                    className="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                    className="group relative min-w-[300px] overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl md:min-w-[360px]"
                   >
                     <div className="p-6">
                       <div className="mb-4 flex items-center justify-between">
@@ -220,6 +229,7 @@ export default async function Home() {
                   </Link>
                 )
               })}
+              </div>
             </div>
           </div>
         </section>

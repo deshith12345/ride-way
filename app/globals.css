@@ -96,4 +96,22 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
+
+  .animate-route-marquee {
+    animation: route-marquee 34s linear infinite;
+  }
+
+  .animate-route-marquee:hover {
+    animation-play-state: paused;
+  }
+
+  @keyframes route-marquee {
+    from {
+      transform: translateX(0);
+    }
+
+    to {
+      transform: translateX(-50%);
+    }
+  }
 }
