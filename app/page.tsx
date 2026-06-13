@@ -11,6 +11,7 @@ import {
   TicketCheck,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import BackgroundSlider from "@/components/shared/BackgroundSlider"
 import { prisma } from "@/lib/prisma"
 
 function formatDuration(minutes?: number | null) {
@@ -39,7 +40,7 @@ function formatPlace(value: string) {
 const featureTiles = [
   {
     title: "Account-protected booking",
-    text: "Travellers browse freely, then sign in before reserving and paying.",
+    text: "Guests can browse routes, then sign in before reserving and paying.",
     icon: ShieldCheck,
     tone: "bg-blue-50 text-blue-700",
   },
@@ -57,11 +58,13 @@ const featureTiles = [
   },
 ]
 
+const heroWallpapers = [
+  "/bus-wallpapers/yellow-city-bus-motion.jpg",
+  "/bus-wallpapers/highway-bus-sunset.jpg",
+  "/bus-wallpapers/red-double-decker-bus.jpg",
+]
+
 export default async function Home() {
-  let travellerCount = 0
-  let routeCount = 0
-  let busCount = 0
-  let scheduledTripCount = 0
   let featuredRoutes: {
     id: string
     origin: string
@@ -72,52 +75,40 @@ export default async function Home() {
 
   try {
     const now = new Date()
-    const [travellers, routes, buses, scheduledTrips, routeCards] = await Promise.all([
-      prisma.user.count({ where: { role: "TRAVELLER" } }),
-      prisma.route.count(),
-      prisma.bus.count({ where: { isActive: true } }),
-      prisma.trip.count({ where: { status: "SCHEDULED", departureTime: { gte: now } } }),
-      prisma.route.findMany({
-        orderBy: { updatedAt: "desc" },
-        take: 4,
-        select: {
-          id: true,
-          origin: true,
-          destination: true,
-          estimatedDuration: true,
-          trips: {
-            where: { status: "SCHEDULED", departureTime: { gte: now } },
-            orderBy: { departureTime: "asc" },
-            take: 1,
-            select: {
-              basePrice: true,
-              departureTime: true,
-            },
+    const routeCards = await prisma.route.findMany({
+      orderBy: { updatedAt: "desc" },
+      take: 4,
+      select: {
+        id: true,
+        origin: true,
+        destination: true,
+        estimatedDuration: true,
+        trips: {
+          where: { status: "SCHEDULED", departureTime: { gte: now } },
+          orderBy: { departureTime: "asc" },
+          take: 1,
+          select: {
+            basePrice: true,
+            departureTime: true,
           },
         },
-      }),
-    ])
+      },
+    })
 
-    travellerCount = travellers
-    routeCount = routes
-    busCount = buses
-    scheduledTripCount = scheduledTrips
     featuredRoutes = routeCards
   } catch (error) {
     console.error("Failed to fetch homepage data:", error)
   }
 
-  const marqueeRoutes = [...featuredRoutes, ...featuredRoutes]
+  const marqueeRoutes = Array.from({ length: 4 }, () => featuredRoutes).flat()
 
   return (
     <main className="flex min-h-screen flex-col overflow-hidden bg-white">
-      <section
-        className="relative overflow-hidden bg-slate-950 bg-cover bg-center bg-no-repeat py-20 md:py-28"
-        style={{ backgroundImage: "url('/bus-exterior-v2.jpg')" }}
-      >
-        <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(2,6,23,0.9),rgba(15,23,42,0.74),rgba(15,23,42,0.34))]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(255,255,255,0.22),transparent_28%),radial-gradient(circle_at_85%_22%,rgba(14,165,233,0.22),transparent_25%)]" />
-        <div className="container relative mx-auto px-4">
+      <section className="relative overflow-hidden bg-slate-950 py-20 md:py-28">
+        <BackgroundSlider images={heroWallpapers} interval={6500} className="z-0" />
+        <div className="absolute inset-0 z-10 bg-[linear-gradient(115deg,rgba(2,6,23,0.9),rgba(15,23,42,0.72),rgba(15,23,42,0.42))]" />
+        <div className="absolute inset-x-0 bottom-0 z-10 h-24 bg-gradient-to-t from-slate-950/55 to-transparent" />
+        <div className="container relative z-20 mx-auto px-4">
           <div className="flex flex-col items-center text-center">
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/15 px-4 py-1.5 shadow-xl shadow-slate-950/20 backdrop-blur-xl">
               <Navigation className="h-4 w-4 text-cyan-200" />
@@ -146,24 +137,6 @@ export default async function Home() {
                 </Button>
               </Link>
             </div>
-            <div className="mt-16 flex flex-wrap justify-center gap-8 text-center md:text-left">
-              <div>
-                <p className="text-3xl font-bold text-white">{travellerCount.toLocaleString()}</p>
-                <p className="text-sm text-slate-200">Travellers</p>
-              </div>
-              <div>
-                <p className="text-3xl font-bold text-white">{routeCount.toLocaleString()}</p>
-                <p className="text-sm text-slate-200">Bus routes</p>
-              </div>
-              <div>
-                <p className="text-3xl font-bold text-white">{busCount.toLocaleString()}</p>
-                <p className="text-sm text-slate-200">Active buses</p>
-              </div>
-              <div>
-                <p className="text-3xl font-bold text-white">{scheduledTripCount.toLocaleString()}</p>
-                <p className="text-sm text-slate-200">Scheduled trips</p>
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -177,10 +150,10 @@ export default async function Home() {
                 Discover published routes from the RideWay schedule and move straight into available trips.
               </p>
             </div>
-            <div className="relative overflow-hidden">
-              <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-white to-transparent" />
-              <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-white to-transparent" />
-              <div className="flex w-max gap-6 animate-route-marquee">
+            <div className="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden py-2">
+              <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 bg-gradient-to-r from-white to-transparent" />
+              <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 bg-gradient-to-l from-white to-transparent" />
+              <div className="flex w-max gap-6 pl-6 will-change-transform animate-route-marquee">
               {marqueeRoutes.map((route, index) => {
                 const nearestTrip = route.trips?.[0]
                 const departureTime = nearestTrip?.departureTime

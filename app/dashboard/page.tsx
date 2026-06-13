@@ -5,10 +5,11 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Bus, Calendar, MapPin, CreditCard, Star, Clock, Loader2, Ticket, XCircle } from "lucide-react"
+import { Bus, Calendar, MapPin, CreditCard, Star, Clock, Loader2, Ticket, XCircle, MessageCircle, ShieldCheck } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import TicketDialog from "@/components/shared/TicketDialog"
+import TravellerSupportChat from "@/components/support/TravellerSupportChat"
 import { format } from "date-fns"
 
 export default function DashboardPage() {
@@ -108,6 +109,7 @@ export default function DashboardPage() {
                     <TabsList className="bg-white p-1.5 soft-shadow border border-slate-100 rounded-2xl w-fit">
                         <TabsTrigger value="upcoming" className="rounded-xl data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg px-8 py-2.5 font-bold transition-all">Upcoming Trips ({upcomingBookings.length})</TabsTrigger>
                         <TabsTrigger value="past" className="rounded-xl data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg px-8 py-2.5 font-bold transition-all">Past History</TabsTrigger>
+                        <TabsTrigger value="support" className="rounded-xl data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg px-8 py-2.5 font-bold transition-all">Support</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="upcoming">
@@ -240,6 +242,34 @@ export default function DashboardPage() {
                                     </div>
                                 </Card>
                             ))}
+                        </div>
+                    </TabsContent>
+
+                    <TabsContent value="support">
+                        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[0.9fr_1.1fr]">
+                            <Card className="soft-shadow border-none rounded-3xl bg-white p-8">
+                                <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-xs font-black uppercase tracking-widest text-blue-700">
+                                    <MessageCircle className="h-4 w-4" />
+                                    Traveller Support
+                                </div>
+                                <h2 className="text-3xl font-black tracking-tight text-slate-900">Need help with a trip?</h2>
+                                <p className="mt-4 text-sm font-semibold leading-7 text-slate-500">
+                                    Start a secure conversation with RideWay support for booking, payment, QR ticket, delay, or account questions.
+                                </p>
+                                <div className="mt-8 grid gap-3">
+                                    {[
+                                        "Your conversation stays attached to your account",
+                                        "Admins can reply from the protected support inbox",
+                                        "You can return here anytime to continue the chat",
+                                    ].map((item) => (
+                                        <div key={item} className="flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm font-bold text-slate-700">
+                                            <ShieldCheck className="h-4 w-4 text-blue-600" />
+                                            {item}
+                                        </div>
+                                    ))}
+                                </div>
+                            </Card>
+                            <TravellerSupportChat />
                         </div>
                     </TabsContent>
                 </Tabs>

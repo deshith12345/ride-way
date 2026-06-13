@@ -8,8 +8,8 @@ export default function Footer() {
                 <div>
                     <h2 className="text-2xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">RideWay</h2>
                     <p className="text-gray-400 text-sm">
-                        Sri Lanka&apos;s No.1 Bus Booking Platform.
-                        Reliable, Secure, and Comfortable.
+                        Online bus booking for Sri Lankan routes.
+                        Reliable, secure, and simple to use.
                     </p>
                 </div>
 
@@ -34,8 +34,9 @@ export default function Footer() {
                 <div>
                     <h3 className="font-semibold mb-4 text-gray-200">Contact</h3>
                     <ul className="space-y-2 text-sm text-gray-400">
-                        <li>hotline@rideway.lk</li>
+                        <li>support@rideway.lk</li>
                         <li>+94 11 234 5678</li>
+                        <li><Link href="/help" className="hover:text-white transition-colors">Live support chat</Link></li>
                         <li>Colombo, Sri Lanka</li>
                     </ul>
                 </div>

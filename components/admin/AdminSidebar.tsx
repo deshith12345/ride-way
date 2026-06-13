@@ -11,6 +11,7 @@ import {
     Calendar,
     Users,
     Settings,
+    MessageCircle,
     LogOut,
     ShieldCheck,
     ChevronLeft,
@@ -26,6 +27,7 @@ const sidebarItems = [
     { name: "Routes", href: "/admin/routes", icon: Route },
     { name: "Schedules", href: "/admin/schedules", icon: Calendar },
     { name: "Users", href: "/admin/users", icon: Users },
+    { name: "Support", href: "/admin/support", icon: MessageCircle },
     { name: "Settings", href: "/admin/settings", icon: Settings },
 ]
 

@@ -98,7 +98,7 @@
   }
 
   .animate-route-marquee {
-    animation: route-marquee 34s linear infinite;
+    animation: route-marquee 18s linear infinite;
   }
 
   .animate-route-marquee:hover {

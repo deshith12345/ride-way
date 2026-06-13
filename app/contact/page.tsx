@@ -22,6 +22,7 @@ export default function ContactPage() {
         <div className="space-y-4">
           {[
             { icon: Phone, title: "Hotline", value: "+94 11 234 5678" },
+            { icon: MessageCircle, title: "Live chat", value: "Available from the Help Center" },
             { icon: Mail, title: "Email", value: "support@rideway.lk" },
             { icon: MapPin, title: "Office", value: "Colombo, Sri Lanka" },
           ].map((item) => (
