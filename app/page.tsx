@@ -4,11 +4,9 @@ import {
   Bus,
   Clock3,
   CreditCard,
-  MapPinned,
   Navigation,
   QrCode,
   ShieldCheck,
-  TicketCheck,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import BackgroundSlider from "@/components/shared/BackgroundSlider"
@@ -62,6 +60,27 @@ const heroWallpapers = [
   "/bus-wallpapers/yellow-city-bus-motion.jpg",
   "/bus-wallpapers/highway-bus-sunset.jpg",
   "/bus-wallpapers/red-double-decker-bus.jpg",
+]
+
+const bookingSteps = [
+  {
+    title: "1. Browse Routes",
+    text: "Open the route list and find published trips for your journey.",
+    logos: [{ src: "/logos/bus-route.svg", alt: "Bus route symbol" }],
+  },
+  {
+    title: "2. Select & Pay",
+    text: "Choose a trip, reserve your seat, and pay securely by card.",
+    logos: [
+      { src: "/logos/visa.svg", alt: "Visa logo" },
+      { src: "/logos/mastercard.svg", alt: "Mastercard logo" },
+    ],
+  },
+  {
+    title: "3. Board with QR",
+    text: "Show your QR code to the driver and enjoy a hassle-free journey.",
+    logos: [{ src: "/logos/qr-code-example.svg", alt: "QR code symbol" }],
+  },
 ]
 
 export default async function Home() {
@@ -218,27 +237,24 @@ export default async function Home() {
             </p>
           </div>
           <div className="mx-auto grid max-w-5xl grid-cols-1 gap-8 md:grid-cols-3">
-            <div className="p-6 text-center">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-100 shadow-sm">
-                <MapPinned className="h-8 w-8 text-blue-600" />
+            {bookingSteps.map((step) => (
+              <div key={step.title} className="p-6 text-center">
+                <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+                  <div className="flex items-center justify-center gap-2">
+                    {step.logos.map((logo) => (
+                      <img
+                        key={logo.src}
+                        src={logo.src}
+                        alt={logo.alt}
+                        className={step.logos.length > 1 ? "max-h-8 max-w-12 object-contain" : "max-h-12 max-w-12 object-contain"}
+                      />
+                    ))}
+                  </div>
+                </div>
+                <h3 className="text-xl font-semibold text-slate-900">{step.title}</h3>
+                <p className="mt-2 text-slate-600">{step.text}</p>
               </div>
-              <h3 className="text-xl font-semibold text-slate-900">1. Browse Routes</h3>
-              <p className="mt-2 text-slate-600">Open the route list and find published trips for your journey.</p>
-            </div>
-            <div className="p-6 text-center">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-100 shadow-sm">
-                <TicketCheck className="h-8 w-8 text-blue-600" />
-              </div>
-              <h3 className="text-xl font-semibold text-slate-900">2. Select & Pay</h3>
-              <p className="mt-2 text-slate-600">Choose a trip, reserve your seat, and pay securely by card.</p>
-            </div>
-            <div className="p-6 text-center">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-100 shadow-sm">
-                <QrCode className="h-8 w-8 text-blue-600" />
-              </div>
-              <h3 className="text-xl font-semibold text-slate-900">3. Board with QR</h3>
-              <p className="mt-2 text-slate-600">Show your QR code to the driver and enjoy a hassle-free journey.</p>
-            </div>
+            ))}
           </div>
         </div>
       </section>

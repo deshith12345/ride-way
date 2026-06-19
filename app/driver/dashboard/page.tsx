@@ -8,6 +8,7 @@ import { MapPin, Clock, Users, Navigation, Calendar, ShieldCheck, ChevronRight, 
 import Link from "next/link"
 import { signOut, useSession } from "next-auth/react"
 import { format } from "date-fns"
+import BrandLogo from "@/components/shared/BrandLogo"
 
 import dynamic from "next/dynamic"
 
@@ -56,6 +57,7 @@ function DriverDashboard() {
             <div className="container mx-auto px-4">
                 <div className="flex justify-between items-start w-full">
                     <div>
+                        <BrandLogo href="/driver/dashboard" size="sm" subtitle="Driver Portal" className="mb-6" />
                         <div className="flex items-center gap-3 mb-2">
                             <h1 className="text-3xl font-bold text-slate-900">Good {new Date().getHours() < 12 ? "Morning" : "Afternoon"}, {session?.user?.name?.split(" ")[0]}</h1>
                             <Badge className="bg-emerald-50 text-emerald-700 border-emerald-100 px-3 py-1 font-bold uppercase tracking-wider">Driver Account</Badge>

@@ -13,13 +13,13 @@ import {
     Settings,
     MessageCircle,
     LogOut,
-    ShieldCheck,
     ChevronLeft,
     ChevronRight
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
+import BrandLogo from "@/components/shared/BrandLogo"
 
 const sidebarItems = [
     { name: "Overview", href: "/admin/dashboard", icon: LayoutDashboard },
@@ -47,17 +47,7 @@ export default function AdminSidebar() {
             collapsed ? "w-20" : "w-72"
         )}>
             <div className="p-6 flex items-center gap-3">
-                <div className="h-10 w-10 bg-blue-600 rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-blue-200">
-                    <Bus className="text-white h-6 w-6" />
-                </div>
-                {!collapsed && (
-                    <div className="flex flex-col">
-                        <span className="font-black text-xl text-slate-900 tracking-tight">RideWay</span>
-                        <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">
-                            <ShieldCheck className="h-2.5 w-2.5 text-blue-500" /> Admin Portal
-                        </div>
-                    </div>
-                )}
+                <BrandLogo href="/admin/dashboard" size="md" subtitle="Admin Portal" showText={!collapsed} />
             </div>
 
             <button

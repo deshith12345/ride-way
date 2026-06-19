@@ -12,13 +12,29 @@ import TicketDialog from "@/components/shared/TicketDialog"
 import TravellerSupportChat from "@/components/support/TravellerSupportChat"
 import { format } from "date-fns"
 import Link from "next/link"
+import { useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
 
 export default function DashboardPage() {
+    const router = useRouter()
+    const { data: session, status } = useSession()
     const [bookings, setBookings] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [cancellingId, setCancellingId] = useState<string | null>(null)
+    const role = session?.user?.role?.toUpperCase()
+    const isPortalRole = role === "ADMIN" || role === "DRIVER"
 
     useEffect(() => {
+        if (role === "ADMIN") router.replace("/admin/dashboard")
+        if (role === "DRIVER") router.replace("/driver/dashboard")
+    }, [role, router])
+
+    useEffect(() => {
+        if (isPortalRole) {
+            setLoading(false)
+            return
+        }
+
         const fetchBookings = async () => {
             try {
                 const res = await fetch('/api/user/bookings')
@@ -31,7 +47,7 @@ export default function DashboardPage() {
             }
         }
         fetchBookings()
-    }, [])
+    }, [isPortalRole])
 
     const handleCancelBooking = async (bookingId: string) => {
         setCancellingId(bookingId)
@@ -57,7 +73,7 @@ export default function DashboardPage() {
     const totalSpent = bookings.reduce((sum, b) => sum + b.totalAmount, 0)
     const loyaltyPoints = Math.floor(totalSpent / 100)
 
-    if (loading) {
+    if (loading || status === "loading" || isPortalRole) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50">
                 <Loader2 className="h-10 w-10 animate-spin text-blue-600" />

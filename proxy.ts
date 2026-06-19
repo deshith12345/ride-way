@@ -1,12 +1,50 @@
 import NextAuth from "next-auth"
 import { NextResponse } from "next/server"
 import { authConfig } from "./auth.config"
-import { getPortalFromHost, getPortalUrl } from "@/lib/portal"
+import { getPortalFromHost, portalPathForRole } from "@/lib/portal"
 
 const { auth } = NextAuth(authConfig)
 
 function matchesRoute(pathname: string, route: string) {
     return pathname === route || pathname.startsWith(`${route}/`)
+}
+
+function requestOrigin(req: any) {
+    const host = req.headers.get("host") || req.nextUrl.host
+    const forwardedProto = req.headers.get("x-forwarded-proto")
+    const protocol = forwardedProto || (host.startsWith("localhost") || host.startsWith("127.") ? "http" : "https")
+
+    return `${protocol}://${host}`
+}
+
+function loginUrlFor(req: any, targetPath: string) {
+    const loginUrl = new URL("/login", requestOrigin(req))
+    loginUrl.searchParams.set("callbackUrl", targetPath)
+    loginUrl.searchParams.set("roleRequired", targetPath.startsWith("/admin") ? "ADMIN" : "DRIVER")
+    return loginUrl
+}
+
+function redirectToLoginAndClearSession(req: any, targetPath: string) {
+    const loginUrl = loginUrlFor(req, targetPath)
+    const response = NextResponse.redirect(loginUrl)
+    const authCookieNames = [
+        "authjs.session-token",
+        "__Secure-authjs.session-token",
+        "next-auth.session-token",
+        "__Secure-next-auth.session-token",
+    ]
+
+    authCookieNames.forEach((name) => response.cookies.delete(name))
+    return response
+}
+
+function redirectToPath(req: any, pathname: string) {
+    const url = new URL(pathname, requestOrigin(req))
+    return NextResponse.redirect(url)
+}
+
+function redirectToRolePortal(req: any, role?: string | null) {
+    return redirectToPath(req, portalPathForRole(role))
 }
 
 const proxy = auth((req) => {
@@ -39,38 +77,48 @@ const proxy = auth((req) => {
 
     const authRoutes = ["/login", "/register"]
     const isAuthRoute = authRoutes.includes(pathname)
+    const callbackUrl = req.nextUrl.searchParams.get("callbackUrl") || ""
+    const callbackRole = callbackUrl.startsWith("/admin")
+        ? "ADMIN"
+        : callbackUrl.startsWith("/driver")
+            ? "DRIVER"
+            : null
 
     if (portal === "admin" && pathname === "/") {
-        return NextResponse.redirect(new URL("/admin/dashboard", req.url))
+        return redirectToPath(req, "/admin/dashboard")
     }
 
     if (portal === "driver" && pathname === "/") {
-        return NextResponse.redirect(new URL("/driver/dashboard", req.url))
+        return redirectToPath(req, "/driver/dashboard")
     }
 
     if (portal === "admin" && !pathname.startsWith("/admin") && !pathname.startsWith("/api") && pathname !== "/login" && pathname !== "/auth/error") {
-        return NextResponse.redirect(new URL("/admin/dashboard", req.url))
+        return redirectToPath(req, "/admin/dashboard")
     }
 
     if (portal === "driver" && !pathname.startsWith("/driver") && !pathname.startsWith("/api") && pathname !== "/login" && pathname !== "/auth/error") {
-        return NextResponse.redirect(new URL("/driver/dashboard", req.url))
+        return redirectToPath(req, "/driver/dashboard")
     }
 
     if (isAuthRoute && isLoggedIn) {
-        return NextResponse.redirect(getPortalUrl(userRole, req.url))
+        if (callbackRole && userRole !== callbackRole) {
+            return redirectToLoginAndClearSession(req, callbackUrl)
+        }
+
+        return redirectToRolePortal(req, userRole)
     }
 
     if (isLoggedIn) {
         if (pathname.startsWith("/admin") && userRole !== "ADMIN") {
-            return NextResponse.redirect(new URL("/dashboard", req.url))
+            return redirectToLoginAndClearSession(req, `${pathname}${req.nextUrl.search}`)
         }
 
         if (pathname.startsWith("/driver") && userRole !== "DRIVER") {
-            return NextResponse.redirect(new URL("/dashboard", req.url))
+            return redirectToLoginAndClearSession(req, `${pathname}${req.nextUrl.search}`)
         }
 
         if (pathname === "/dashboard" && (userRole === "ADMIN" || userRole === "DRIVER")) {
-            return NextResponse.redirect(getPortalUrl(userRole, req.url))
+            return redirectToRolePortal(req, userRole)
         }
     }
 
@@ -79,8 +127,10 @@ const proxy = auth((req) => {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
         }
 
-        const loginUrl = new URL("/login", req.url)
+        const loginUrl = new URL("/login", requestOrigin(req))
         loginUrl.searchParams.set("callbackUrl", `${pathname}${req.nextUrl.search}`)
+        if (pathname.startsWith("/admin")) loginUrl.searchParams.set("roleRequired", "ADMIN")
+        if (pathname.startsWith("/driver")) loginUrl.searchParams.set("roleRequired", "DRIVER")
         return NextResponse.redirect(loginUrl)
     }
 

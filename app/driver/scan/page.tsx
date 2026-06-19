@@ -6,6 +6,7 @@ import { ArrowLeft, CheckCircle2, Loader2, QrCode, XCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import BrandLogo from "@/components/shared/BrandLogo"
 
 export default function ScanTicketPage() {
     const [ticketCode, setTicketCode] = useState("")
@@ -55,6 +56,7 @@ export default function ScanTicketPage() {
     return (
         <div className="min-h-screen bg-slate-50">
             <div className="container mx-auto max-w-lg space-y-6 p-6">
+                <BrandLogo href="/driver/dashboard" size="sm" subtitle="Driver Portal" />
                 <div className="flex items-center gap-4">
                     <Link href="/driver/dashboard">
                         <Button variant="outline" size="icon" className="rounded-xl">

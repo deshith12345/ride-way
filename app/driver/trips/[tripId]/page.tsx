@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ArrowLeft, Search, Users, MapPin, Clock, Loader2, CheckCircle2, Circle, Bus } from "lucide-react"
 import Link from "next/link"
+import BrandLogo from "@/components/shared/BrandLogo"
 
 export default function TripManifestPage({ params }: { params: Promise<{ tripId: string }> }) {
     const { tripId } = use(params)
@@ -78,6 +79,7 @@ export default function TripManifestPage({ params }: { params: Promise<{ tripId:
     return (
         <div className="min-h-screen bg-slate-50">
             <div className="container max-w-3xl mx-auto p-6 space-y-6">
+                <BrandLogo href="/driver/dashboard" size="sm" subtitle="Driver Portal" />
                 {/* Header */}
                 <div className="flex items-center gap-4">
                     <Link href="/driver/dashboard">
@@ -108,7 +110,7 @@ export default function TripManifestPage({ params }: { params: Promise<{ tripId:
                                 <div className="flex items-center gap-2 text-sm">
                                     <MapPin className="h-4 w-4 text-blue-600" />
                                     <span className="font-bold text-slate-800">{trip.route?.origin}</span>
-                                    <span className="text-slate-400">→</span>
+                                    <span className="text-slate-400">-&gt;</span>
                                     <span className="font-bold text-slate-800">{trip.route?.destination}</span>
                                 </div>
                                 <div className="flex items-center gap-2 text-sm text-slate-500">

@@ -75,7 +75,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           })
 
           if (existingUser) {
-            user.role = UserRole.TRAVELLER
+            user.role = existingUser.role
             user.id = existingUser.id
           } else {
             const newUser = await prisma.user.create({
@@ -96,6 +96,32 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         console.error("SignIn Callback Error:", error)
         return false
       }
+    },
+    async jwt(params) {
+      const token = authConfig.callbacks?.jwt
+        ? await authConfig.callbacks.jwt(params as any)
+        : params.token
+      const userId = token.id as string | undefined
+      const email = token.email as string | undefined
+
+      if (userId || email) {
+        const dbUser = await prisma.user.findFirst({
+          where: userId ? { id: userId } : { email },
+          select: { id: true, role: true },
+        })
+
+        if (dbUser) {
+          token.id = dbUser.id
+          token.role = dbUser.role
+        }
+      }
+
+      return token
+    },
+    async session(params) {
+      return authConfig.callbacks?.session
+        ? authConfig.callbacks.session(params as any)
+        : params.session
     },
   },
 })

@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
-import { Bus, ShieldCheck, User, Loader2 } from "lucide-react"
+import { ShieldCheck, User, Loader2 } from "lucide-react"
+import BrandLogo from "@/components/shared/BrandLogo"
 
 const travellerConfig = {
   label: "Traveller",
@@ -100,6 +101,10 @@ export default function RegisterPage() {
 
 
 
+        <div className="relative z-20">
+          <BrandLogo href="/" variant="light" size="md" />
+        </div>
+
         <div className="relative z-20 max-w-md animate-in fade-in slide-in-from-left-8 duration-700">
 
           <h2 className="text-5xl font-black mb-4 leading-tight">{travellerConfig.title}</h2>
@@ -123,12 +128,7 @@ export default function RegisterPage() {
         <div className="max-w-xl mx-auto px-6 py-12 lg:py-20 lg:px-12">
           {/* Mobile Branding */}
           <div className="lg:hidden mb-12 flex justify-between items-center">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <Bus className="text-white h-5 w-5" />
-              </div>
-              <span className="text-xl font-bold tracking-tight">RideWay</span>
-            </Link>
+            <BrandLogo href="/" size="sm" />
             <Link href="/login" className="text-sm font-bold text-blue-600">Sign In</Link>
           </div>
 
@@ -271,7 +271,7 @@ export default function RegisterPage() {
               variant="outline"
               className="w-full h-12 rounded-xl border-slate-200 font-bold text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-3 shadow-sm transition-all active:scale-95"
               disabled={!googleEnabled}
-              onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+              onClick={() => signIn("google", { callbackUrl: "/dashboard" }, { prompt: "select_account" })}
             >
               <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" className="w-5 h-5" alt="Google" />
               {googleEnabled ? "Register with Google" : "Google registration unavailable"}

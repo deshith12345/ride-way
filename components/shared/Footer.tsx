@@ -1,12 +1,13 @@
 
 import Link from "next/link"
+import BrandLogo from "./BrandLogo"
 
 export default function Footer() {
     return (
         <footer className="bg-gray-900 text-white py-12">
             <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div>
-                    <h2 className="text-2xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">RideWay</h2>
+                    <BrandLogo href="/" variant="light" size="sm" className="mb-4" />
                     <p className="text-gray-400 text-sm">
                         Online bus booking for Sri Lankan routes.
                         Reliable, secure, and simple to use.
