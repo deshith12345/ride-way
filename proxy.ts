@@ -61,6 +61,7 @@ const proxy = auth((req) => {
     const publicRoutes = [
         "/",
         "/about",
+        "/auth/error",
         "/api/auth",
         "/api/locations",
         "/api/routes",

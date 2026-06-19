@@ -31,20 +31,22 @@ function getLoginAttemptKey(email: string, request: Request) {
   return `${getClientIp(request)}:${email}`
 }
 
-function assertLoginAllowed(key: string) {
+function isLoginAllowed(key: string) {
   const attempt = loginAttempts.get(key)
   const now = Date.now()
 
-  if (!attempt) return
+  if (!attempt) return true
 
   if (attempt.resetAt <= now) {
     loginAttempts.delete(key)
-    return
+    return true
   }
 
   if (attempt.lockedUntil && attempt.lockedUntil > now) {
-    throw new Error("Invalid credentials")
+    return false
   }
+
+  return true
 }
 
 function recordFailedLogin(key: string) {
@@ -85,12 +87,12 @@ providers.push(
     },
     async authorize(credentials, request) {
       if (!credentials?.email || !credentials?.password) {
-        throw new Error("Invalid credentials")
+        return null
       }
 
       const email = (credentials.email as string).trim().toLowerCase()
       const loginAttemptKey = getLoginAttemptKey(email, request)
-      assertLoginAllowed(loginAttemptKey)
+      if (!isLoginAllowed(loginAttemptKey)) return null
 
       const user = await prisma.user.findUnique({
         where: {
@@ -100,7 +102,7 @@ providers.push(
 
       if (!user || !user.password) {
         recordFailedLogin(loginAttemptKey)
-        throw new Error("Invalid credentials")
+        return null
       }
 
       const isPasswordValid = await bcrypt.compare(
@@ -110,7 +112,7 @@ providers.push(
 
       if (!isPasswordValid) {
         recordFailedLogin(loginAttemptKey)
-        throw new Error("Invalid credentials")
+        return null
       }
 
       clearFailedLogins(loginAttemptKey)
