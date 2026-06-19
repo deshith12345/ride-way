@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
     Dialog,
+    DialogClose,
     DialogContent,
     DialogDescription,
     DialogFooter,
@@ -237,13 +238,15 @@ function SettingsPage() {
                                     )}
 
                                     <DialogFooter className="mt-8 gap-3 sm:gap-0">
-                                        <Button
-                                            variant="outline"
-                                            className="rounded-xl h-12 font-bold border-slate-200"
-                                            onClick={() => setIsDeleting(false)}
-                                        >
-                                            Cancel
-                                        </Button>
+                                        <DialogClose asChild>
+                                            <Button
+                                                variant="outline"
+                                                className="rounded-xl h-12 font-bold border-slate-200"
+                                                onClick={() => setIsDeleting(false)}
+                                            >
+                                                Cancel
+                                            </Button>
+                                        </DialogClose>
                                         <Button
                                             variant="destructive"
                                             className="rounded-xl h-12 font-black shadow-lg shadow-rose-200"

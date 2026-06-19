@@ -55,12 +55,7 @@ export default function TicketDialog({ ticket }: { ticket: TicketData }) {
         pdf.save(`Ticket-${ticket.seatNumber}-${ticket.id}.pdf`)
     }
 
-    const qrValue = ticket.qrCode || JSON.stringify({
-        id: ticket.id,
-        seat: ticket.seatNumber,
-        name: ticket.passengerName,
-        trip: ticket.route
-    })
+    const qrValue = ticket.qrCode || ticket.id
 
     return (
         <Dialog>

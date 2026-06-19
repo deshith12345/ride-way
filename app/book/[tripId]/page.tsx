@@ -21,6 +21,27 @@ interface Seat {
     price: number
 }
 
+interface TripDetails {
+    id: string
+    basePrice: number
+    departureTime: string
+    bus: {
+        totalSeats: number
+        type: string
+        registrationNo: string
+    }
+    route: {
+        origin: string
+        destination: string
+    }
+}
+
+interface BookedSeat {
+    seatNumber: string
+    gender?: "MALE" | "FEMALE" | "male" | "female" | null
+    status?: string | null
+}
+
 
 interface Passenger {
     seat: string
@@ -35,8 +56,10 @@ export default function BookingPage() {
     const router = useRouter()
     const tripId = params.tripId as string
 
-    const [trip, setTrip] = useState<any>(null)
+    const [trip, setTrip] = useState<TripDetails | null>(null)
+    const [bookedSeats, setBookedSeats] = useState<BookedSeat[]>([])
     const [loading, setLoading] = useState(true)
+    const [error, setError] = useState("")
     const [selectedSeats, setSelectedSeats] = useState<Seat[]>([])
     const [passengerDetails, setPassengerDetails] = useState<Passenger[]>([])
     const [isProcessing, setIsProcessing] = useState(false)
@@ -49,13 +72,27 @@ export default function BookingPage() {
 
     const fetchTripDetails = async () => {
         try {
-            const res = await fetch(`/api/trips/${tripId}`)
-            const data = await res.json()
-            if (data.id) {
-                setTrip(data)
+            setError("")
+            const [tripRes, seatsRes] = await Promise.all([
+                fetch(`/api/trips/${tripId}`),
+                fetch(`/api/trips/${tripId}/seats`),
+            ])
+
+            const tripData = await tripRes.json()
+            if (!tripRes.ok) {
+                throw new Error(tripData.error || "Trip not found")
             }
+
+            const seatsData = await seatsRes.json()
+            if (!seatsRes.ok) {
+                throw new Error(seatsData.error || "Unable to load seat availability")
+            }
+
+            setTrip(tripData)
+            setBookedSeats(Array.isArray(seatsData.bookedSeats) ? seatsData.bookedSeats : [])
         } catch (error) {
             console.error("Failed to fetch trip details:", error)
+            setError(error instanceof Error ? error.message : "Unable to load this trip")
         } finally {
             setLoading(false)
         }
@@ -112,7 +149,7 @@ export default function BookingPage() {
                     <Bus className="h-8 w-8" />
                 </div>
                 <h1 className="text-2xl font-black text-slate-900">Trip Not Found</h1>
-                <p className="text-slate-500 font-medium">This trip may have expired or was cancelled.</p>
+                <p className="text-slate-500 font-medium">{error || "This trip may have expired or was cancelled."}</p>
                 <Button onClick={() => router.push('/routes')} className="bg-blue-600 rounded-xl px-10">Back to Routes</Button>
             </div>
         )
@@ -138,7 +175,12 @@ export default function BookingPage() {
                                 <CardDescription className="text-lg font-medium text-slate-500">Select seats for your journey. Male and female indicators are shown for occupied seats.</CardDescription>
                             </CardHeader>
                             <CardContent className="p-10">
-                                <SeatMap totalSeats={trip.bus.totalSeats} onSeatSelect={handleSeatSelect} />
+                                <SeatMap
+                                    totalSeats={trip.bus.totalSeats}
+                                    bookedSeats={bookedSeats}
+                                    basePrice={trip.basePrice || 1500}
+                                    onSeatSelect={handleSeatSelect}
+                                />
                             </CardContent>
                         </Card>
 

@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
 import { Button } from "@/components/ui/button"
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Cell } from "recharts"
-import { Bus, CalendarCheck, DollarSign, Users, BarChart3, ArrowUpRight, Loader2 } from "lucide-react"
+import { Bus, CalendarCheck, DollarSign, Users, BarChart3, RefreshCw, Loader2 } from "lucide-react"
+import Link from "next/link"
 
 export default function AdminDashboard() {
     const [stats, setStats] = useState<any[]>([])
@@ -14,22 +15,48 @@ export default function AdminDashboard() {
     const [revenueByDay, setRevenueByDay] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
 
-    useEffect(() => {
-        const fetchStats = async () => {
-            try {
-                const res = await fetch('/api/admin/stats')
-                const data = await res.json()
-                if (data.stats) setStats(data.stats)
-                if (data.activity) setActivities(data.activity)
-                if (data.revenueByDay) setRevenueByDay(data.revenueByDay)
-            } catch (err) {
-                console.error("Failed to fetch stats:", err)
-            } finally {
-                setLoading(false)
-            }
+    const fetchStats = async () => {
+        try {
+            setLoading(true)
+            const res = await fetch('/api/admin/stats')
+            const data = await res.json()
+            if (data.stats) setStats(data.stats)
+            if (data.activity) setActivities(data.activity)
+            if (data.revenueByDay) setRevenueByDay(data.revenueByDay)
+        } catch (err) {
+            console.error("Failed to fetch stats:", err)
+        } finally {
+            setLoading(false)
         }
+    }
+
+    useEffect(() => {
         fetchStats()
     }, [])
+
+    const downloadReport = () => {
+        const rows = [
+            ["RideWay Admin Report"],
+            ["Generated", new Date().toLocaleString()],
+            [],
+            ["Metric", "Value", "Trend"],
+            ...stats.map((item) => [item.title, item.value, item.trend]),
+            [],
+            ["Recent Activity"],
+            ["User", "Action", "Time"],
+            ...activities.map((item) => [item.user, item.action, item.time]),
+        ]
+        const csv = rows
+            .map((row) => row.map((value) => `"${String(value ?? "").replace(/"/g, '""')}"`).join(","))
+            .join("\n")
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8" })
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement("a")
+        link.href = url
+        link.download = `rideway-report-${new Date().toISOString().slice(0, 10)}.csv`
+        link.click()
+        URL.revokeObjectURL(url)
+    }
 
     const iconMap: Record<string, any> = {
         DollarSign,
@@ -49,8 +76,8 @@ export default function AdminDashboard() {
                     <p className="text-slate-500 mt-1">Welcome back, here's what's happening today.</p>
                 </div>
                 <div className="flex gap-3">
-                    <button className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold hover:bg-slate-50 transition-colors soft-shadow">Download Report</button>
-                    <button className="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm">Manage Users</button>
+                    <button onClick={downloadReport} className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold hover:bg-slate-50 transition-colors soft-shadow">Download Report</button>
+                    <Link href="/admin/users" className="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm">Manage Users</Link>
                 </div>
             </div>
 
@@ -139,7 +166,9 @@ export default function AdminDashboard() {
                                 </div>
                             ))}
                         </div>
-                        <Button variant="ghost" className="w-full mt-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50">View All Activity <ArrowUpRight className="ml-2 h-4 w-4" /></Button>
+                        <Button variant="ghost" onClick={fetchStats} className="w-full mt-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50">
+                            Refresh Activity <RefreshCw className="ml-2 h-4 w-4" />
+                        </Button>
                     </CardContent>
                 </Card>
             </div>

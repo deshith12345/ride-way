@@ -3,6 +3,14 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
 
+function cleanCode(value: unknown) {
+    return typeof value === 'string' ? value.trim() : '';
+}
+
+function isObjectId(value: string) {
+    return /^[a-f\d]{24}$/i.test(value);
+}
+
 // POST - verify a ticket QR code
 export async function POST(req: Request) {
     try {
@@ -11,19 +19,22 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { qrCode, ticketId } = await req.json();
+        const body = await req.json();
+        const qrCode = cleanCode(body.qrCode);
+        const ticketId = cleanCode(body.ticketId);
+        const filters = [];
 
-        if (!qrCode && !ticketId) {
+        if (qrCode) filters.push({ qrCode });
+        if (ticketId && isObjectId(ticketId)) filters.push({ id: ticketId });
+
+        if (filters.length === 0) {
             return NextResponse.json({ error: 'QR code or ticket ID required' }, { status: 400 });
         }
 
-        // Find the ticket
-        const where: any = {};
-        if (qrCode) where.qrCode = qrCode;
-        if (ticketId) where.id = ticketId;
-
         const ticket = await prisma.ticket.findFirst({
-            where,
+            where: {
+                OR: filters,
+            },
             include: {
                 booking: {
                     include: {
@@ -45,6 +56,13 @@ export async function POST(req: Request) {
                 valid: false,
                 error: 'Ticket not found'
             }, { status: 404 });
+        }
+
+        if (!['CONFIRMED', 'COMPLETED'].includes(ticket.booking.status) || ticket.booking.paymentStatus !== 'PAID') {
+            return NextResponse.json({
+                valid: false,
+                error: 'Booking is not confirmed for boarding'
+            }, { status: 400 });
         }
 
         // Check if ticket is already used
@@ -96,7 +114,7 @@ export async function POST(req: Request) {
                 seatNumber: updatedTicket.seatNumber,
                 passengerName: updatedTicket.passengerName,
                 status: updatedTicket.status,
-                route: ticket.booking.trip.route.name,
+                route: ticket.booking.trip.route.name || `${ticket.booking.trip.route.origin} to ${ticket.booking.trip.route.destination}`,
                 passenger: ticket.booking.user?.name || ticket.passengerName,
             }
         });

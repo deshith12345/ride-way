@@ -9,7 +9,10 @@ export async function GET(req: Request) {
         const date = searchParams.get('date');
 
         const where: any = {
-            status: 'SCHEDULED'
+            status: 'SCHEDULED',
+            departureTime: {
+                gte: new Date()
+            }
         };
 
         if (from || to) {
@@ -24,6 +27,10 @@ export async function GET(req: Request) {
 
         if (date) {
             const searchDate = new Date(date);
+            if (Number.isNaN(searchDate.getTime())) {
+                return NextResponse.json({ error: 'Invalid travel date' }, { status: 400 });
+            }
+
             const nextDay = new Date(searchDate);
             nextDay.setDate(searchDate.getDate() + 1);
 

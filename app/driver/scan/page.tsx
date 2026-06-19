@@ -12,6 +12,20 @@ export default function ScanTicketPage() {
     const [loading, setLoading] = useState(false)
     const [result, setResult] = useState<any>(null)
 
+    const buildVerificationPayload = (rawCode: string) => {
+        const code = rawCode.trim()
+
+        try {
+            const parsed = JSON.parse(code)
+            if (typeof parsed?.qrCode === "string") return { qrCode: parsed.qrCode }
+            if (typeof parsed?.id === "string") return { ticketId: parsed.id }
+        } catch {
+            // Plain ticket IDs and QR strings are handled below.
+        }
+
+        return /^[a-f\d]{24}$/i.test(code) ? { ticketId: code } : { qrCode: code }
+    }
+
     const handleVerify = async () => {
         if (!ticketCode.trim()) return
 
@@ -22,7 +36,7 @@ export default function ScanTicketPage() {
             const res = await fetch('/api/driver/verify-ticket', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ticketId: ticketCode.trim() })
+                body: JSON.stringify(buildVerificationPayload(ticketCode))
             })
             const data = await res.json()
             setResult(data)

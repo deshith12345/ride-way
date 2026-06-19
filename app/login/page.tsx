@@ -13,6 +13,7 @@ import { Loader2, ArrowRight } from "lucide-react"
 import { Suspense } from "react"
 import { useEffect } from "react"
 import { getPortalUrl } from "@/lib/portal"
+import { Bus } from "lucide-react"
 
 function LoginContent() {
     const router = useRouter()
@@ -103,7 +104,10 @@ function LoginContent() {
                 {/* Branding */}
                 <div className="text-center mb-8 flex flex-col items-center">
                     <div className="p-3 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 mb-4 shadow-2xl">
-                        <img src="/logo.png" alt="RideWay" className="h-10 w-auto invert brightness-0" />
+                        <div className="flex items-center gap-2 text-white">
+                            <Bus className="h-8 w-8" />
+                            <span className="text-2xl font-black tracking-tight">RideWay</span>
+                        </div>
                     </div>
                     <h1 className="text-3xl font-black text-white tracking-tight drop-shadow-md">Welcome Back</h1>
                     <p className="text-blue-100 font-medium mt-2">Sign in to your RideWay account</p>

@@ -162,7 +162,7 @@ function DriverDashboard() {
                     <div className="lg:col-span-2 space-y-6">
                         <div className="flex justify-between items-center">
                             <h2 className="text-2xl font-bold text-slate-900">Upcoming Schedule</h2>
-                            <Button variant="ghost" className="text-blue-600 font-bold hover:bg-blue-50">View Full Calendar</Button>
+                            <Button variant="ghost" onClick={fetchStats} className="text-blue-600 font-bold hover:bg-blue-50">Refresh Schedule</Button>
                         </div>
                         <div className="space-y-4">
                             {loading ? (

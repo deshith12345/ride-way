@@ -14,30 +14,54 @@ interface Seat {
 
 interface SeatMapProps {
     totalSeats?: number
+    bookedSeats?: BookedSeat[]
+    basePrice?: number
+    maxSelectable?: number
     onSeatSelect: (selectedSeats: Seat[]) => void
 }
 
-const generateSeats = (count: number): Seat[] => {
+interface BookedSeat {
+    seatNumber: string
+    gender?: 'male' | 'female' | 'MALE' | 'FEMALE' | null
+    status?: string | null
+}
+
+const normalizeGender = (gender?: BookedSeat["gender"]) => {
+    if (!gender) return undefined
+    return gender.toLowerCase() === "female" ? "female" : "male"
+}
+
+const generateSeats = (count: number, bookedSeats: BookedSeat[], basePrice: number): Seat[] => {
+    const bookedBySeat = new Map(
+        bookedSeats.map((seat) => [seat.seatNumber, seat])
+    )
     const seats: Seat[] = []
+
     for (let i = 0; i < count; i++) {
-        const seed = (i + 1) * 17 + count * 13
-        const isOccupied = seed % 10 < 3
-        const isReserved = !isOccupied && seed % 23 === 0
-        const gender = isOccupied ? (seed % 2 === 0 ? 'male' : 'female') : undefined
+        const number = (i + 1).toString()
+        const bookedSeat = bookedBySeat.get(number)
+        const isBooked = Boolean(bookedSeat)
 
         seats.push({
             id: `seat-${count}-${i}`,
-            number: (i + 1).toString(),
-            status: isOccupied ? 'occupied' : (isReserved ? 'reserved' : 'available'),
-            gender: gender,
-            price: 1500
+            number,
+            status: isBooked ? 'occupied' : 'available',
+            gender: normalizeGender(bookedSeat?.gender),
+            price: basePrice
         })
     }
+
     return seats
 }
 
-export default function SeatMap({ totalSeats = 45, onSeatSelect }: SeatMapProps) {
-    const baseSeats = useMemo(() => generateSeats(totalSeats), [totalSeats])
+export default function SeatMap({
+    totalSeats = 45,
+    bookedSeats = [],
+    basePrice = 1500,
+    maxSelectable = 5,
+    onSeatSelect
+}: SeatMapProps) {
+    const baseSeats = useMemo(() => generateSeats(totalSeats, bookedSeats, basePrice), [basePrice, bookedSeats, totalSeats])
     const [selectedSeatIds, setSelectedSeatIds] = useState<string[]>([])
     const activeSelectedIds = selectedSeatIds.filter(id => baseSeats.some(seat => seat.id === id))
     const seats = baseSeats.map(seat => (
@@ -53,8 +77,8 @@ export default function SeatMap({ totalSeats = 45, onSeatSelect }: SeatMapProps)
         if (isSelected) {
             newSelectedIds = activeSelectedIds.filter(id => id !== seat.id)
         } else {
-            if (activeSelectedIds.length >= 5) {
-                alert("You can only select up to 5 seats.")
+            if (activeSelectedIds.length >= maxSelectable) {
+                alert(`You can only select up to ${maxSelectable} seats.`)
                 return
             }
             newSelectedIds = [...activeSelectedIds, seat.id]

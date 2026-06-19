@@ -7,10 +7,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Bus, Calendar, MapPin, CreditCard, Star, Clock, Loader2, Ticket, XCircle, MessageCircle, ShieldCheck } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import TicketDialog from "@/components/shared/TicketDialog"
 import TravellerSupportChat from "@/components/support/TravellerSupportChat"
 import { format } from "date-fns"
+import Link from "next/link"
 
 export default function DashboardPage() {
     const [bookings, setBookings] = useState<any[]>([])
@@ -72,7 +73,9 @@ export default function DashboardPage() {
                         <h1 className="text-4xl font-black text-slate-900 tracking-tight">My Dashboard</h1>
                         <p className="text-slate-500 font-medium mt-1">Manage your bookings and travel history</p>
                     </div>
-                    <Button className="gradient-primary text-white rounded-2xl px-8 shadow-xl shadow-blue-100 hover:scale-105 transition-all h-12">Edit Profile</Button>
+                    <Link href="/settings">
+                        <Button className="gradient-primary text-white rounded-2xl px-8 shadow-xl shadow-blue-100 hover:scale-105 transition-all h-12">Edit Profile</Button>
+                    </Link>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
@@ -121,7 +124,9 @@ export default function DashboardPage() {
                                     </div>
                                     <h3 className="text-xl font-bold text-slate-900 mb-2">No upcoming trips</h3>
                                     <p className="text-slate-500 max-w-xs mx-auto">Your next adventure is just a booking away! Explore new routes today.</p>
-                                    <Button className="mt-8 gradient-primary text-white rounded-xl px-10 h-12 shadow-lg shadow-blue-100">Find a Bus</Button>
+                                    <Link href="/routes">
+                                        <Button className="mt-8 gradient-primary text-white rounded-xl px-10 h-12 shadow-lg shadow-blue-100">Find a Bus</Button>
+                                    </Link>
                                 </Card>
                             ) : upcomingBookings.map((booking, i) => (
                                 <Card key={booking.id} className="soft-shadow border-none rounded-3xl bg-white overflow-hidden group hover:ring-2 ring-blue-50 transition-all duration-300">
@@ -183,7 +188,9 @@ export default function DashboardPage() {
                                                         origin: booking.trip.route.origin,
                                                         destination: booking.trip.route.destination,
                                                         busNumber: booking.trip.bus.registrationNo,
-                                                        busType: booking.trip.bus.type
+                                                        busType: booking.trip.bus.type,
+                                                        passengerGender: t.passengerGender,
+                                                        qrCode: t.qrCode,
                                                     }}
                                                 />
                                             ))}
@@ -199,7 +206,9 @@ export default function DashboardPage() {
                                                         <DialogDescription>This will cancel your booking and invalidate all tickets. This action cannot be undone.</DialogDescription>
                                                     </DialogHeader>
                                                     <DialogFooter className="gap-3 sm:gap-0">
-                                                        <Button variant="outline" className="rounded-xl font-bold">Keep Booking</Button>
+                                                        <DialogClose asChild>
+                                                            <Button variant="outline" className="rounded-xl font-bold">Keep Booking</Button>
+                                                        </DialogClose>
                                                         <Button variant="destructive" className="rounded-xl font-bold" onClick={() => handleCancelBooking(booking.id)} disabled={cancellingId === booking.id}>
                                                             {cancellingId === booking.id ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <XCircle className="h-4 w-4 mr-2" />}
                                                             Yes, Cancel

@@ -1,7 +1,7 @@
 
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { createPaidBooking } from '@/lib/booking';
+import { BookingInputError, createPaidBooking } from '@/lib/booking';
 import { getCardBrand, isValidExpiry, isValidLuhn } from '@/lib/payments';
 
 export const POST = auth(async function POST(req: any) {
@@ -43,6 +43,6 @@ export const POST = auth(async function POST(req: any) {
     } catch (error: any) {
         console.error('Checkout Error:', error);
         const message = error.message || 'Payment failed';
-        return NextResponse.json({ error: message }, { status: 500 });
+        return NextResponse.json({ error: message }, { status: error instanceof BookingInputError ? 400 : 500 });
     }
 })

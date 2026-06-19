@@ -28,6 +28,7 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
+    DialogClose,
 } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
@@ -38,6 +39,14 @@ export default function BusFleetPage() {
     const [buses, setBuses] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+    const [searchQuery, setSearchQuery] = useState("")
+    const [typeFilter, setTypeFilter] = useState("ALL")
+    const [selectedBus, setSelectedBus] = useState<any>(null)
+    const [showDetailsDialog, setShowDetailsDialog] = useState(false)
+    const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+    const [actionError, setActionError] = useState("")
+    const [isSubmitting, setIsSubmitting] = useState(false)
+    const [deletingId, setDeletingId] = useState<string | null>(null)
     const [newBus, setNewBus] = useState({
         registrationNo: "",
         number: "",
@@ -54,6 +63,7 @@ export default function BusFleetPage() {
 
     const fetchBuses = async () => {
         try {
+            setLoading(true)
             const res = await fetch('/api/admin/buses')
             const data = await res.json()
             if (Array.isArray(data)) setBuses(data)
@@ -69,6 +79,7 @@ export default function BusFleetPage() {
         if (!file) return
 
         setIsUploading(true)
+        setActionError("")
         const formData = new FormData()
         formData.append('file', file)
 
@@ -78,17 +89,21 @@ export default function BusFleetPage() {
                 body: formData
             })
             const data = await res.json()
+            if (!res.ok) throw new Error(data.error || "Upload failed")
             if (data.url) {
                 setNewBus(prev => ({ ...prev, images: [...prev.images, data.url] }))
             }
         } catch (error) {
             console.error("Upload failed:", error)
+            setActionError(error instanceof Error ? error.message : "Upload failed")
         } finally {
             setIsUploading(false)
         }
     }
 
     const handleAddBus = async () => {
+        setIsSubmitting(true)
+        setActionError("")
         try {
             const res = await fetch('/api/admin/buses', {
                 method: 'POST',
@@ -107,10 +122,47 @@ export default function BusFleetPage() {
                     images: []
                 })
             }
+            else {
+                const data = await res.json()
+                setActionError(data.error || "Failed to add bus")
+            }
         } catch (error) {
             console.error("Failed to add bus:", error)
+            setActionError("Failed to add bus")
+        } finally {
+            setIsSubmitting(false)
         }
     }
+
+    const handleDeleteBus = async () => {
+        if (!selectedBus) return
+        setDeletingId(selectedBus.id)
+        setActionError("")
+
+        try {
+            const res = await fetch(`/api/admin/buses/${selectedBus.id}`, { method: 'DELETE' })
+            const data = await res.json()
+            if (!res.ok) throw new Error(data.error || "Failed to delete bus")
+
+            setShowDeleteDialog(false)
+            setSelectedBus(null)
+            await fetchBuses()
+        } catch (error) {
+            setActionError(error instanceof Error ? error.message : "Failed to delete bus")
+        } finally {
+            setDeletingId(null)
+        }
+    }
+
+    const filteredBuses = buses.filter((bus) => {
+        const query = searchQuery.trim().toLowerCase()
+        const matchesSearch = !query ||
+            bus.registrationNo?.toLowerCase().includes(query) ||
+            bus.number?.toLowerCase().includes(query)
+        const matchesType = typeFilter === "ALL" || bus.type === typeFilter
+
+        return matchesSearch && matchesType
+    })
 
     return (
         <div className="space-y-6">
@@ -129,6 +181,11 @@ export default function BusFleetPage() {
                             <DialogDescription>Enter the details for the new bus in your fleet.</DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
+                            {actionError && (
+                                <div className="rounded-xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-600">
+                                    {actionError}
+                                </div>
+                            )}
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label>Reg No</Label>
@@ -195,7 +252,10 @@ export default function BusFleetPage() {
                         </div>
                         <DialogFooter>
                             <Button variant="outline" onClick={() => setIsAddModalOpen(false)}>Cancel</Button>
-                            <Button onClick={handleAddBus} className="bg-blue-600">Register Bus</Button>
+                            <Button onClick={handleAddBus} disabled={isSubmitting || isUploading} className="bg-blue-600">
+                                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Register Bus
+                            </Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
@@ -204,10 +264,34 @@ export default function BusFleetPage() {
             <div className="flex items-center gap-4">
                 <div className="relative flex-1 max-w-sm">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-                    <Input placeholder="Search buses..." className="pl-8" />
+                    <Input
+                        placeholder="Search buses..."
+                        className="pl-8"
+                        value={searchQuery}
+                        onChange={(event) => setSearchQuery(event.target.value)}
+                    />
                 </div>
-                <Button variant="outline"><Filter className="mr-2 h-4 w-4" /> Filter</Button>
+                <Select value={typeFilter} onValueChange={setTypeFilter}>
+                    <SelectTrigger className="w-48">
+                        <Filter className="mr-2 h-4 w-4" />
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="ALL">All Types</SelectItem>
+                        <SelectItem value="AC">AC</SelectItem>
+                        <SelectItem value="NON_AC">Non-AC</SelectItem>
+                        <SelectItem value="LUXURY">Luxury</SelectItem>
+                        <SelectItem value="SUPER_LUXURY">Super Luxury</SelectItem>
+                        <SelectItem value="HIGHWAY">Highway</SelectItem>
+                    </SelectContent>
+                </Select>
             </div>
+
+            {actionError && !isAddModalOpen && (
+                <div className="rounded-xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-600">
+                    {actionError}
+                </div>
+            )}
 
             <div className="rounded-md border bg-white overflow-hidden">
                 <Table>
@@ -228,13 +312,13 @@ export default function BusFleetPage() {
                                     <Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-600" />
                                 </TableCell>
                             </TableRow>
-                        ) : buses.length === 0 ? (
+                        ) : filteredBuses.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={6} className="h-24 text-center text-slate-500 font-medium">
                                     No buses found in fleet.
                                 </TableCell>
                             </TableRow>
-                        ) : buses.map((bus) => (
+                        ) : filteredBuses.map((bus) => (
                             <TableRow key={bus.id} className="hover:bg-slate-50/50">
                                 <TableCell className="font-bold text-slate-900">{bus.registrationNo}</TableCell>
                                 <TableCell>
@@ -256,10 +340,22 @@ export default function BusFleetPage() {
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end">
                                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                            <DropdownMenuItem>View Details</DropdownMenuItem>
-                                            <DropdownMenuItem>Edit Configuration</DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => {
+                                                setSelectedBus(bus)
+                                                setShowDetailsDialog(true)
+                                            }}>
+                                                View Details
+                                            </DropdownMenuItem>
                                             <DropdownMenuSeparator />
-                                            <DropdownMenuItem className="text-red-600">Delete Bus</DropdownMenuItem>
+                                            <DropdownMenuItem
+                                                className="text-red-600"
+                                                onClick={() => {
+                                                    setSelectedBus(bus)
+                                                    setShowDeleteDialog(true)
+                                                }}
+                                            >
+                                                Delete Bus
+                                            </DropdownMenuItem>
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                 </TableCell>
@@ -268,6 +364,49 @@ export default function BusFleetPage() {
                     </TableBody>
                 </Table>
             </div>
+
+            <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Bus Details</DialogTitle>
+                        <DialogDescription>{selectedBus?.registrationNo}</DialogDescription>
+                    </DialogHeader>
+                    {selectedBus && (
+                        <div className="space-y-3 text-sm">
+                            <div className="flex justify-between"><span className="text-slate-500">Display Number</span><span className="font-bold">{selectedBus.number || "Not set"}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-500">Type</span><span className="font-bold">{selectedBus.type}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-500">Seats</span><span className="font-bold">{selectedBus.totalSeats}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-500">Amenities</span><span className="font-bold">{selectedBus.amenities?.length ? selectedBus.amenities.join(", ") : "None"}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-500">Status</span><span className="font-bold">{selectedBus.isActive ? "Active" : "Inactive"}</span></div>
+                        </div>
+                    )}
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button variant="outline">Close</Button>
+                        </DialogClose>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Delete Bus</DialogTitle>
+                        <DialogDescription>
+                            Delete {selectedBus?.registrationNo}? Buses assigned to trips cannot be removed.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button variant="outline">Cancel</Button>
+                        </DialogClose>
+                        <Button variant="destructive" onClick={handleDeleteBus} disabled={deletingId === selectedBus?.id}>
+                            {deletingId === selectedBus?.id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Delete Bus
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

@@ -22,6 +22,7 @@ const proxy = auth((req) => {
         "/api/locations",
         "/api/routes",
         "/api/stats",
+        "/api/track",
         "/api/trips",
         "/contact",
         "/forgot-password",
