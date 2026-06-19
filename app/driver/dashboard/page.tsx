@@ -83,7 +83,7 @@ function DriverDashboard() {
                         </div>
                         <Button
                             variant="outline"
-                            onClick={() => signOut({ callbackUrl: "/" })}
+                            onClick={() => signOut({ redirectTo: "/" })}
                             className="rounded-xl border-slate-200 font-bold hover:bg-rose-50 hover:text-rose-600 hover:border-rose-100"
                         >
                             <LogOut className="h-4 w-4 sm:mr-2" />

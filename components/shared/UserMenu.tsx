@@ -63,7 +63,7 @@ export default function UserMenu({ user }: UserMenuProps) {
                 </Link>
                 <DropdownMenuSeparator className="bg-slate-50" />
                 <DropdownMenuItem
-                    onClick={() => signOut({ callbackUrl: "/" })}
+                    onClick={() => signOut({ redirectTo: "/" })}
                     className="rounded-xl p-3 font-bold text-rose-600 flex items-center gap-2 cursor-pointer focus:bg-rose-50 focus:text-rose-700"
                 >
                     <LogOut className="h-4 w-4" />

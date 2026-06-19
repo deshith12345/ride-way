@@ -83,7 +83,7 @@ function SettingsPage() {
             }
 
             // Successfully deleted, sign out and redirect to home
-            await signOut({ callbackUrl: "/" })
+            await signOut({ redirectTo: "/" })
         } catch (err: any) {
             setError(err.message)
             setIsDeleting(false)

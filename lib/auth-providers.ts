@@ -19,7 +19,7 @@ export function getGoogleProvider(): Provider | null {
       return {
         id: profile.sub,
         name: profile.name,
-        email: profile.email,
+        email: typeof profile.email === "string" ? profile.email.trim().toLowerCase() : profile.email,
         image: profile.picture,
         role: "TRAVELLER",
       }

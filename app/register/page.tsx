@@ -214,7 +214,7 @@ export default function RegisterPage() {
                   type="password"
                   required
                   placeholder="••••••••"
-                  minLength={6}
+                  minLength={8}
                   className="h-12 rounded-xl border-slate-200 focus:ring-blue-500"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
@@ -271,7 +271,7 @@ export default function RegisterPage() {
               variant="outline"
               className="w-full h-12 rounded-xl border-slate-200 font-bold text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-3 shadow-sm transition-all active:scale-95"
               disabled={!googleEnabled}
-              onClick={() => signIn("google", { callbackUrl: "/dashboard" }, { prompt: "select_account" })}
+              onClick={() => signIn("google", { redirectTo: "/dashboard" }, { prompt: "select_account" })}
             >
               <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" className="w-5 h-5" alt="Google" />
               {googleEnabled ? "Register with Google" : "Google registration unavailable"}

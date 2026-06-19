@@ -104,7 +104,7 @@ export default function AdminSidebar() {
 
                 <Button
                     variant="ghost"
-                    onClick={() => signOut({ callbackUrl: "/" })}
+                    onClick={() => signOut({ redirectTo: "/" })}
                     className={cn(
                         "w-full flex items-center gap-3 justify-start rounded-xl font-bold text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-all",
                         collapsed && "px-0 justify-center"

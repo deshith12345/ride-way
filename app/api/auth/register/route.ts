@@ -6,8 +6,8 @@ import { z } from "zod"
 
 const registerSchema = z.object({
     name: z.string().min(2, "Name must be at least 2 characters"),
-    email: z.string().email("Invalid email address"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
+    email: z.string().trim().toLowerCase().email("Invalid email address"),
+    password: z.string().min(8, "Password must be at least 8 characters").max(128, "Password is too long"),
     phone: z.string().optional(),
     role: z.literal("TRAVELLER").default("TRAVELLER"),
 })

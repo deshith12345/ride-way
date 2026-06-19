@@ -37,6 +37,18 @@ export const authConfig = {
         authorized({ auth, request: { nextUrl } }) {
             return true
         },
+        async redirect({ url, baseUrl }) {
+            if (url.startsWith("/")) return `${baseUrl}${url}`
+
+            try {
+                const target = new URL(url)
+                if (target.origin === baseUrl) return target.toString()
+            } catch {
+                return baseUrl
+            }
+
+            return baseUrl
+        },
         async jwt({ token, user }) {
             if (user) {
                 token.role = (user as any).role

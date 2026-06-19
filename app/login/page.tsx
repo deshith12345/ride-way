@@ -3,17 +3,15 @@
 import { Suspense, useEffect, useState } from "react"
 import Link from "next/link"
 import { getProviders, signIn } from "next-auth/react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useSearchParams } from "next/navigation"
 import { ArrowRight, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import BrandLogo from "@/components/shared/BrandLogo"
-import { getPortalUrl } from "@/lib/portal"
 
 function LoginContent() {
-    const router = useRouter()
     const searchParams = useSearchParams()
     const [formData, setFormData] = useState({
         email: "",
@@ -33,17 +31,6 @@ function LoginContent() {
         return callbackUrl
     }
 
-    function getSafeCallbackUrl(role?: string | null) {
-        const callbackUrl = getRequestedCallbackUrl()
-        if (!callbackUrl) return null
-
-        const normalizedRole = role?.toUpperCase()
-        if (callbackUrl.startsWith("/admin") && normalizedRole !== "ADMIN") return null
-        if (callbackUrl.startsWith("/driver") && normalizedRole !== "DRIVER") return null
-
-        return callbackUrl
-    }
-
     useEffect(() => {
         getProviders().then((providers) => {
             setGoogleEnabled(Boolean(providers?.google))
@@ -56,10 +43,12 @@ function LoginContent() {
         setLoading(true)
 
         try {
+            const redirectTo = getRequestedCallbackUrl() || "/dashboard"
             const result = await signIn("credentials", {
                 email: formData.email,
                 password: formData.password,
                 redirect: false,
+                redirectTo,
             })
 
             if (result?.error) {
@@ -68,18 +57,7 @@ function LoginContent() {
                 return
             }
 
-            const { getSession } = await import("next-auth/react")
-            const session = await getSession()
-            const role = session?.user?.role?.toUpperCase()
-
-            router.refresh()
-
-            const safeCallbackUrl = getSafeCallbackUrl(role)
-            if (safeCallbackUrl) {
-                router.push(safeCallbackUrl)
-            } else {
-                window.location.href = getPortalUrl(role, window.location.href).toString()
-            }
+            window.location.href = result?.url || redirectTo
         } catch {
             setError("Something went wrong. Please try again.")
             setLoading(false)
@@ -203,7 +181,7 @@ function LoginContent() {
                             disabled={!googleEnabled}
                             onClick={() => signIn(
                                 "google",
-                                { callbackUrl: getRequestedCallbackUrl() || "/dashboard" },
+                                { redirectTo: getRequestedCallbackUrl() || "/dashboard" },
                                 { prompt: "select_account" }
                             )}
                         >

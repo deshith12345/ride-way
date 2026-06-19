@@ -28,9 +28,10 @@ providers.push(
         throw new Error("Invalid credentials")
       }
 
+      const email = (credentials.email as string).trim().toLowerCase()
       const user = await prisma.user.findUnique({
         where: {
-          email: credentials.email as string,
+          email,
         },
       })
 
@@ -64,11 +65,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   providers,
   callbacks: {
     ...authConfig.callbacks,
-    async signIn({ user, account }) {
+    async signIn({ user, account, profile }) {
       try {
         if (account?.provider === "google") {
-          const email = user.email as string
+          if ((profile as any)?.email_verified === false) return false
+
+          const email = typeof user.email === "string" ? user.email.trim().toLowerCase() : ""
           if (!email) return false
+          user.email = email
 
           const existingUser = await prisma.user.findUnique({
             where: { email },
