@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react"
 import Link from "next/link"
-import { getProviders, signIn } from "next-auth/react"
+import { getProviders, signIn, signOut, useSession } from "next-auth/react"
 import { useSearchParams } from "next/navigation"
 import { ArrowRight, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -13,6 +13,7 @@ import BrandLogo from "@/components/shared/BrandLogo"
 
 function LoginContent() {
     const searchParams = useSearchParams()
+    const { data: session, status } = useSession()
     const [formData, setFormData] = useState({
         email: "",
         password: "",
@@ -24,6 +25,13 @@ function LoginContent() {
 
     const registered = searchParams.get("registered")
     const roleRequired = searchParams.get("roleRequired")
+    const requiredRole = roleRequired?.toUpperCase()
+    const currentRole = session?.user?.role?.toUpperCase()
+    const shouldSwitchAccount =
+        searchParams.get("switchAccount") === "1" &&
+        status === "authenticated" &&
+        Boolean(requiredRole) &&
+        currentRole !== requiredRole
 
     function getRequestedCallbackUrl() {
         const callbackUrl = searchParams.get("callbackUrl")
@@ -36,6 +44,22 @@ function LoginContent() {
             setGoogleEnabled(Boolean(providers?.google))
         })
     }, [])
+
+    useEffect(() => {
+        if (!shouldSwitchAccount || !requiredRole) return
+
+        const requestedCallbackUrl = searchParams.get("callbackUrl")
+        const callbackUrl =
+            requestedCallbackUrl?.startsWith("/") && !requestedCallbackUrl.startsWith("//")
+                ? requestedCallbackUrl
+                : "/dashboard"
+        const params = new URLSearchParams({
+            callbackUrl,
+            roleRequired: requiredRole,
+        })
+
+        signOut({ redirectTo: `/login?${params.toString()}` })
+    }, [searchParams, shouldSwitchAccount, requiredRole])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
