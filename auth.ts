@@ -10,6 +10,66 @@ import { getGoogleProvider } from "@/lib/auth-providers"
 
 const providers: Provider[] = []
 const googleProvider = getGoogleProvider()
+const LOGIN_WINDOW_MS = 15 * 60 * 1000
+const LOGIN_LOCK_MS = 15 * 60 * 1000
+const MAX_FAILED_LOGINS = 5
+
+type LoginAttempt = {
+  count: number
+  resetAt: number
+  lockedUntil?: number
+}
+
+const loginAttempts = new Map<string, LoginAttempt>()
+
+function getClientIp(request: Request) {
+  const forwardedFor = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+  return forwardedFor || request.headers.get("x-real-ip") || "unknown"
+}
+
+function getLoginAttemptKey(email: string, request: Request) {
+  return `${getClientIp(request)}:${email}`
+}
+
+function assertLoginAllowed(key: string) {
+  const attempt = loginAttempts.get(key)
+  const now = Date.now()
+
+  if (!attempt) return
+
+  if (attempt.resetAt <= now) {
+    loginAttempts.delete(key)
+    return
+  }
+
+  if (attempt.lockedUntil && attempt.lockedUntil > now) {
+    throw new Error("Invalid credentials")
+  }
+}
+
+function recordFailedLogin(key: string) {
+  const now = Date.now()
+  const attempt = loginAttempts.get(key)
+
+  if (!attempt || attempt.resetAt <= now) {
+    loginAttempts.set(key, {
+      count: 1,
+      resetAt: now + LOGIN_WINDOW_MS,
+    })
+    return
+  }
+
+  const nextCount = attempt.count + 1
+  loginAttempts.set(key, {
+    count: nextCount,
+    resetAt: attempt.resetAt,
+    lockedUntil: nextCount >= MAX_FAILED_LOGINS ? now + LOGIN_LOCK_MS : attempt.lockedUntil,
+  })
+}
+
+function clearFailedLogins(key: string) {
+  loginAttempts.delete(key)
+}
 
 if (googleProvider) {
   providers.push(googleProvider)
@@ -23,12 +83,15 @@ providers.push(
       email: { label: "Email", type: "email" },
       password: { label: "Password", type: "password" },
     },
-    async authorize(credentials) {
+    async authorize(credentials, request) {
       if (!credentials?.email || !credentials?.password) {
         throw new Error("Invalid credentials")
       }
 
       const email = (credentials.email as string).trim().toLowerCase()
+      const loginAttemptKey = getLoginAttemptKey(email, request)
+      assertLoginAllowed(loginAttemptKey)
+
       const user = await prisma.user.findUnique({
         where: {
           email,
@@ -36,6 +99,7 @@ providers.push(
       })
 
       if (!user || !user.password) {
+        recordFailedLogin(loginAttemptKey)
         throw new Error("Invalid credentials")
       }
 
@@ -45,8 +109,11 @@ providers.push(
       )
 
       if (!isPasswordValid) {
+        recordFailedLogin(loginAttemptKey)
         throw new Error("Invalid credentials")
       }
+
+      clearFailedLogins(loginAttemptKey)
 
       return {
         id: user.id,
