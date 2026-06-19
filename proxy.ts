@@ -48,14 +48,6 @@ const proxy = auth((req) => {
         return NextResponse.redirect(new URL("/driver/dashboard", req.url))
     }
 
-    if (pathname.startsWith("/admin") && portal !== "admin") {
-        return NextResponse.redirect(getPortalUrl("ADMIN", req.url))
-    }
-
-    if (pathname.startsWith("/driver") && portal !== "driver") {
-        return NextResponse.redirect(getPortalUrl("DRIVER", req.url))
-    }
-
     if (portal === "admin" && !pathname.startsWith("/admin") && !pathname.startsWith("/api") && pathname !== "/login" && pathname !== "/auth/error") {
         return NextResponse.redirect(new URL("/admin/dashboard", req.url))
     }

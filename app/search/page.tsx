@@ -106,8 +106,7 @@ function SearchResults() {
                             <div className="py-20 text-center bg-white rounded-3xl border-4 border-dashed border-slate-100">
                                 <MapPin className="h-12 w-12 text-slate-300 mx-auto mb-4" />
                                 <h3 className="text-xl font-bold text-slate-900 mb-2">No buses found</h3>
-                                <p className="text-slate-500 max-w-xs mx-auto mb-6">We couldn't find any buses for this route on the selected date.</p>
-                                <SearchWidget />
+                                <p className="text-slate-500 max-w-xs mx-auto">We couldn't find any buses for this route on the selected date. Adjust your search above and try again.</p>
                             </div>
                         ) : (
                             trips.map((trip) => (
