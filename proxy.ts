@@ -27,6 +27,11 @@ function loginUrlFor(req: any, targetPath: string) {
 function redirectToLoginAndClearSession(req: any, targetPath: string) {
     const loginUrl = loginUrlFor(req, targetPath)
     const response = NextResponse.redirect(loginUrl)
+    clearSessionCookies(response)
+    return response
+}
+
+function clearSessionCookies(response: NextResponse) {
     const authCookieNames = [
         "authjs.session-token",
         "__Secure-authjs.session-token",
@@ -102,7 +107,7 @@ const proxy = auth((req) => {
 
     if (isAuthRoute && isLoggedIn) {
         if (callbackRole && userRole !== callbackRole) {
-            return redirectToLoginAndClearSession(req, callbackUrl)
+            return clearSessionCookies(NextResponse.next())
         }
 
         return redirectToRolePortal(req, userRole)
