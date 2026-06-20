@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server';
+import { TripStatus } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+
+const bookableTripStatuses: TripStatus[] = ['SCHEDULED', 'BOARDING', 'DELAYED'];
 
 export async function GET() {
     try {
@@ -11,7 +14,7 @@ export async function GET() {
             include: {
                 trips: {
                     where: {
-                        status: 'SCHEDULED',
+                        status: { in: bookableTripStatuses },
                         departureTime: { gte: new Date() },
                     },
                     orderBy: { basePrice: 'asc' },

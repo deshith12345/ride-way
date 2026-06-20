@@ -21,8 +21,6 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 
-const tripStatuses = ["SCHEDULED", "BOARDING", "DEPARTED", "IN_TRANSIT", "ARRIVED", "COMPLETED", "CANCELLED", "DELAYED"]
-
 const emptyTripForm = {
     routeId: "",
     busId: "",
@@ -32,7 +30,6 @@ const emptyTripForm = {
     arrivalTime: "",
     arrivalDate: "",
     basePrice: "1500",
-    status: "SCHEDULED",
 }
 
 function toDateInputValue(value: string | Date) {
@@ -116,7 +113,6 @@ export default function SchedulePage() {
             arrivalDate: toDateInputValue(trip.arrivalTime),
             arrivalTime: toTimeInputValue(trip.arrivalTime),
             basePrice: String(trip.basePrice),
-            status: trip.status || "SCHEDULED",
         })
     }
 
@@ -200,7 +196,7 @@ export default function SchedulePage() {
                 <Card className="border-slate-200 shadow-sm lg:col-span-1">
                     <CardHeader className="rounded-t-xl border-b border-slate-100 bg-slate-50">
                         <CardTitle className="text-lg">{editingTripId ? "Edit Schedule" : "Assign New Trip"}</CardTitle>
-                        <CardDescription>{editingTripId ? "Change route, bus, driver, time, price, or status." : "Schedule a bus for a specific route."}</CardDescription>
+                        <CardDescription>{editingTripId ? "Change route, bus, driver, time, or price." : "Schedule a bus for a specific route."}</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4 pt-6">
                         {formError && (
@@ -282,22 +278,6 @@ export default function SchedulePage() {
                             </Select>
                         </div>
 
-                        {editingTripId && (
-                            <div className="space-y-2">
-                                <Label className="text-slate-600">Status</Label>
-                                <Select value={newTrip.status} onValueChange={(value) => setNewTrip({ ...newTrip, status: value })}>
-                                    <SelectTrigger className="h-11 border-slate-200">
-                                        <SelectValue placeholder="Select Status" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {tripStatuses.map((status) => (
-                                            <SelectItem key={status} value={status}>{status.replace(/_/g, " ")}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        )}
-
                         <div className="flex gap-3">
                             {editingTripId && (
                                 <Button variant="outline" className="mt-2 h-12 flex-1 rounded-xl font-bold" onClick={resetForm} disabled={submitting}>
@@ -340,7 +320,6 @@ export default function SchedulePage() {
                                             <div className="flex items-center gap-4 text-xs font-medium text-slate-500">
                                                 <span className="flex items-center gap-1.5"><Bus className="h-3.5 w-3.5" /> {trip.bus.registrationNo}</span>
                                                 <span className="flex items-center gap-1.5"><User className="h-3.5 w-3.5" /> {trip.driver?.name || "Unassigned"}</span>
-                                                <span className="rounded bg-slate-100 px-2 py-0.5 font-black text-slate-500">{trip.status?.replace(/_/g, " ")}</span>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-4">

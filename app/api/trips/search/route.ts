@@ -1,8 +1,23 @@
 import { NextResponse } from 'next/server';
+import { TripStatus } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+
+const bookableTripStatuses: TripStatus[] = ['SCHEDULED', 'BOARDING', 'DELAYED'];
+const sriLankaUtcOffsetMs = 5.5 * 60 * 60 * 1000;
+
+function getSriLankaDayRange(date: string) {
+    const [year, month, day] = date.split('-').map(Number);
+    if (!year || !month || !day) return null;
+
+    const startUtc = new Date(Date.UTC(year, month - 1, day) - sriLankaUtcOffsetMs);
+    const endUtc = new Date(Date.UTC(year, month - 1, day + 1) - sriLankaUtcOffsetMs);
+
+    if (Number.isNaN(startUtc.getTime()) || Number.isNaN(endUtc.getTime())) return null;
+    return { startUtc, endUtc };
+}
 
 export async function GET(req: Request) {
     try {
@@ -12,7 +27,7 @@ export async function GET(req: Request) {
         const date = searchParams.get('date');
 
         const where: any = {
-            status: 'SCHEDULED',
+            status: { in: bookableTripStatuses },
             departureTime: {
                 gte: new Date()
             }
@@ -29,17 +44,16 @@ export async function GET(req: Request) {
         }
 
         if (date) {
-            const searchDate = new Date(date);
-            if (Number.isNaN(searchDate.getTime())) {
+            const dayRange = getSriLankaDayRange(date);
+            if (!dayRange) {
                 return NextResponse.json({ error: 'Invalid travel date' }, { status: 400 });
             }
 
-            const nextDay = new Date(searchDate);
-            nextDay.setDate(searchDate.getDate() + 1);
+            const now = new Date();
 
             where.departureTime = {
-                gte: searchDate,
-                lt: nextDay
+                gte: dayRange.startUtc > now ? dayRange.startUtc : now,
+                lt: dayRange.endUtc
             };
         }
 

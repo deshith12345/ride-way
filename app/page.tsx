@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button"
 import BackgroundSlider from "@/components/shared/BackgroundSlider"
 import { prisma } from "@/lib/prisma"
+import { TripStatus } from "@prisma/client"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
@@ -65,6 +66,8 @@ const heroWallpapers = [
   "/bus-wallpapers/red-double-decker-bus.jpg",
 ]
 
+const bookableTripStatuses: TripStatus[] = ["SCHEDULED", "BOARDING", "DELAYED"]
+
 const bookingSteps = [
   {
     title: "1. Browse Routes",
@@ -106,7 +109,7 @@ export default async function Home() {
         destination: true,
         estimatedDuration: true,
         trips: {
-          where: { status: "SCHEDULED", departureTime: { gte: now } },
+          where: { status: { in: bookableTripStatuses }, departureTime: { gte: now } },
           orderBy: { departureTime: "asc" },
           take: 1,
           select: {
