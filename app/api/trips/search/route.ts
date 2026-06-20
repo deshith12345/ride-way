@@ -34,13 +34,28 @@ export async function GET(req: Request) {
         };
 
         if (from || to) {
-            where.route = {};
+            const routeWhere: any = {};
             if (from) {
-                where.route.origin = { contains: from, mode: 'insensitive' };
+                routeWhere.origin = { contains: from, mode: 'insensitive' };
             }
             if (to) {
-                where.route.destination = { contains: to, mode: 'insensitive' };
+                routeWhere.destination = { contains: to, mode: 'insensitive' };
             }
+
+            const matchingRoutes = await prisma.route.findMany({
+                where: routeWhere,
+                select: { id: true },
+            });
+
+            if (matchingRoutes.length === 0) {
+                return NextResponse.json([], {
+                    headers: {
+                        'Cache-Control': 'no-store, max-age=0',
+                    },
+                });
+            }
+
+            where.routeId = { in: matchingRoutes.map((route) => route.id) };
         }
 
         if (date) {

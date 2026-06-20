@@ -124,7 +124,10 @@ export default function RoutesPage() {
               <p className="text-slate-500 font-bold">Discovering routes...</p>
             </div>
           ) : (
-            filteredRoutes.map(route => (
+            filteredRoutes.map(route => {
+              const hasScheduledBus = route.basePrice !== null && route.basePrice !== undefined
+
+              return (
               <div key={route.id} className="group bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
                 <div className="p-8">
                   <div className="flex justify-between items-start mb-8">
@@ -151,17 +154,23 @@ export default function RoutesPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="text-[10px] text-slate-400 font-black uppercase tracking-wider block mb-1">Fare starts at</span>
-                      <span className="text-2xl font-black text-blue-600">LKR {route.basePrice || "---"}</span>
+                      <span className="text-2xl font-black text-blue-600">{hasScheduledBus ? `LKR ${route.basePrice}` : "No buses scheduled"}</span>
                     </div>
-                    <Link href={`/search?from=${route.origin.toLowerCase()}&to=${route.destination.toLowerCase()}`}>
-                      <Button className="bg-slate-900 text-white hover:bg-black h-14 px-8 rounded-2xl font-black shadow-lg shadow-slate-200 transition-all hover:-translate-x-1 active:scale-95">
+                    <Link
+                      href={hasScheduledBus ? `/search?from=${route.origin.toLowerCase()}&to=${route.destination.toLowerCase()}` : "#"}
+                      aria-disabled={!hasScheduledBus}
+                      onClick={(event) => {
+                        if (!hasScheduledBus) event.preventDefault()
+                      }}
+                    >
+                      <Button disabled={!hasScheduledBus} className="bg-slate-900 text-white hover:bg-black h-14 px-8 rounded-2xl font-black shadow-lg shadow-slate-200 transition-all hover:-translate-x-1 active:scale-95 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 disabled:shadow-none">
                         Book Now
                       </Button>
                     </Link>
                   </div>
                 </div>
               </div>
-            ))
+            )})
           )}
         </div>
 

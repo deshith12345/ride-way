@@ -2,7 +2,7 @@
 "use client"
 
 import * as React from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Calendar as CalendarIcon, MapPin, Search } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -36,6 +36,7 @@ import {
 
 export default function SearchWidget() {
     const router = useRouter()
+    const searchParams = useSearchParams()
     const [cities, setCities] = React.useState<{ value: string, label: string }[]>([])
     const [date, setDate] = React.useState<string>("")
     const [openOrigin, setOpenOrigin] = React.useState(false)
@@ -55,6 +56,26 @@ export default function SearchWidget() {
         }
         fetchCities()
     }, [])
+
+    React.useEffect(() => {
+        const findCityValue = (value: string | null) => {
+            const normalizedValue = value?.trim().toLowerCase()
+            if (!normalizedValue) return ""
+
+            return cities.find((city) =>
+                city.value.toLowerCase() === normalizedValue ||
+                city.label.toLowerCase() === normalizedValue
+            )?.value || normalizedValue
+        }
+
+        setOrigin(findCityValue(searchParams.get("from")))
+        setDestination(findCityValue(searchParams.get("to")))
+        setDate(searchParams.get("date") || "")
+    }, [cities, searchParams])
+
+    const cityLabel = (value: string) => {
+        return cities.find((city) => city.value === value)?.label || value
+    }
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault()
@@ -86,7 +107,7 @@ export default function SearchWidget() {
                                     <div className="flex items-center truncate">
                                         <MapPin className="mr-2 h-4 w-4 text-blue-600" />
                                         {origin
-                                            ? cities.find((city) => city.value === origin)?.label
+                                            ? cityLabel(origin)
                                             : "Select city"}
                                     </div>
                                 </Button>
@@ -131,7 +152,7 @@ export default function SearchWidget() {
                                     <div className="flex items-center truncate">
                                         <MapPin className="mr-2 h-4 w-4 text-blue-600" />
                                         {destination
-                                            ? cities.find((city) => city.value === destination)?.label
+                                            ? cityLabel(destination)
                                             : "Select city"}
                                     </div>
                                 </Button>
@@ -166,6 +187,7 @@ export default function SearchWidget() {
                         <label className="text-sm font-medium text-slate-700 ml-1">Date</label>
                         <Input
                             type="date"
+                            value={date}
                             className="w-full justify-start rounded-2xl border-slate-200 bg-white text-left font-normal hover:border-blue-400 h-12"
                             onChange={(e) => setDate(e.target.value)}
                         />
