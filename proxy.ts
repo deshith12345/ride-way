@@ -93,7 +93,14 @@ function redirectToRolePortal(req: any, role?: string | null) {
     return redirectToPath(req, portalPathForRole(role))
 }
 
-function expectedRoleForPortal(portal: ReturnType<typeof getPortalFromHost>) {
+function expectedRoleForRequest(
+    portal: ReturnType<typeof getPortalFromHost>,
+    pathname: string,
+    requestedAuthRole?: string | null
+) {
+    if (requestedAuthRole) return requestedAuthRole
+    if (pathname.startsWith("/admin")) return "ADMIN"
+    if (pathname.startsWith("/driver")) return "DRIVER"
     if (portal === "admin") return "ADMIN"
     if (portal === "driver") return "DRIVER"
     return "TRAVELLER"
@@ -104,7 +111,6 @@ const proxy = auth((req) => {
     const portal = getPortalFromHost(req.headers.get("host"))
     const isLoggedIn = !!req.auth
     const userRole = normalizeRole(req.auth?.user?.role)
-    const expectedPortalRole = expectedRoleForPortal(portal)
 
     const publicRoutes = [
         "/",
@@ -133,18 +139,21 @@ const proxy = auth((req) => {
     const isAuthRoute = authRoutes.includes(pathname)
     const isAuthApiRoute = pathname.startsWith("/api/auth")
     const callbackUrl = req.nextUrl.searchParams.get("callbackUrl") || ""
+    const requestedRole = normalizeRole(req.nextUrl.searchParams.get("roleRequired"))
     const callbackRole = callbackUrl.startsWith("/admin")
         ? "ADMIN"
         : callbackUrl.startsWith("/driver")
             ? "DRIVER"
             : null
+    const expectedRequestRole = expectedRoleForRequest(portal, pathname, callbackRole || requestedRole)
+    const isRoleScopedPath = pathname.startsWith("/admin") || pathname.startsWith("/driver")
 
-    if (isLoggedIn && (!userRole || userRole !== expectedPortalRole) && !isAuthApiRoute && pathname !== "/auth/error") {
+    if (isLoggedIn && (!userRole || userRole !== expectedRequestRole) && !isAuthApiRoute && pathname !== "/auth/error") {
         if (pathname.startsWith("/api")) {
             return unauthorizedAndClearSession(req)
         }
 
-        if (isAuthRoute || portal === "public") {
+        if (isAuthRoute || (portal === "public" && !isRoleScopedPath)) {
             return redirectToCurrentPathAndClearSession(req)
         }
 
