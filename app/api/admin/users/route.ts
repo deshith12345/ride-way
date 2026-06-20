@@ -36,10 +36,101 @@ export async function GET(req: Request) {
                 email: true,
                 role: true,
                 image: true,
+                phone: true,
+                emailVerified: true,
+                licenseNumber: true,
+                isVerified: true,
                 createdAt: true,
+                updatedAt: true,
                 _count: {
                     select: {
                         bookings: true,
+                        assignedTrips: true,
+                        reviews: true,
+                        supportConversations: true,
+                    },
+                },
+                bookings: {
+                    take: 5,
+                    orderBy: { createdAt: 'desc' },
+                    select: {
+                        id: true,
+                        bookingDate: true,
+                        totalAmount: true,
+                        status: true,
+                        paymentStatus: true,
+                        createdAt: true,
+                        _count: {
+                            select: {
+                                tickets: true,
+                            },
+                        },
+                        payment: {
+                            select: {
+                                amount: true,
+                                currency: true,
+                                method: true,
+                                status: true,
+                                createdAt: true,
+                            },
+                        },
+                        trip: {
+                            select: {
+                                id: true,
+                                departureTime: true,
+                                arrivalTime: true,
+                                status: true,
+                                route: {
+                                    select: {
+                                        name: true,
+                                        origin: true,
+                                        destination: true,
+                                    },
+                                },
+                                bus: {
+                                    select: {
+                                        registrationNo: true,
+                                        type: true,
+                                    },
+                                },
+                                driver: {
+                                    select: {
+                                        name: true,
+                                        email: true,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                assignedTrips: {
+                    take: 5,
+                    orderBy: { departureTime: 'desc' },
+                    select: {
+                        id: true,
+                        departureTime: true,
+                        arrivalTime: true,
+                        status: true,
+                        basePrice: true,
+                        _count: {
+                            select: {
+                                bookings: true,
+                            },
+                        },
+                        route: {
+                            select: {
+                                name: true,
+                                origin: true,
+                                destination: true,
+                            },
+                        },
+                        bus: {
+                            select: {
+                                registrationNo: true,
+                                type: true,
+                                totalSeats: true,
+                            },
+                        },
                     },
                 },
             },

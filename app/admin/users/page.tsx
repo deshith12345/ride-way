@@ -37,7 +37,7 @@ import {
 } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
-import { MoreHorizontal, Search, Users, Loader2, Shield, Trash2 } from "lucide-react"
+import { CalendarDays, CreditCard, Eye, Mail, MoreHorizontal, Phone, Route, Search, Users, Loader2, Shield, Trash2 } from "lucide-react"
 import { useSession } from "next-auth/react"
 
 export default function AdminUsersPage() {
@@ -47,6 +47,7 @@ export default function AdminUsersPage() {
     const [searchQuery, setSearchQuery] = useState("")
     const [roleFilter, setRoleFilter] = useState("ALL")
     const [selectedUser, setSelectedUser] = useState<any>(null)
+    const [showDetailsDialog, setShowDetailsDialog] = useState(false)
     const [showRoleDialog, setShowRoleDialog] = useState(false)
     const [showDeleteDialog, setShowDeleteDialog] = useState(false)
     const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false)
@@ -181,6 +182,29 @@ export default function AdminUsersPage() {
         )
     }
 
+    const formatDate = (value?: string) => {
+        if (!value) return "--"
+        const date = new Date(value)
+        if (Number.isNaN(date.getTime())) return "--"
+        return date.toLocaleString()
+    }
+
+    const formatCurrency = (value?: number | null, currency = "LKR") => {
+        if (typeof value !== "number") return "--"
+        return `${currency} ${value.toLocaleString()}`
+    }
+
+    const statusBadge = (status?: string) => (
+        <span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-black text-slate-600">
+            {(status || "UNKNOWN").replace(/_/g, " ")}
+        </span>
+    )
+
+    const openDetails = (user: any) => {
+        setSelectedUser(user)
+        setShowDetailsDialog(true)
+    }
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -248,7 +272,7 @@ export default function AdminUsersPage() {
                             <TableHead className="font-bold">User</TableHead>
                             <TableHead className="font-bold">Email</TableHead>
                             <TableHead className="font-bold">Role</TableHead>
-                            <TableHead className="font-bold">Bookings</TableHead>
+                            <TableHead className="font-bold">Activity</TableHead>
                             <TableHead className="font-bold">Joined</TableHead>
                             <TableHead className="text-right font-bold">Actions</TableHead>
                         </TableRow>
@@ -293,7 +317,12 @@ export default function AdminUsersPage() {
                                 </TableCell>
                                 <TableCell className="text-slate-500 font-medium">{user.email}</TableCell>
                                 <TableCell>{roleBadge(user.role)}</TableCell>
-                                <TableCell className="font-medium text-slate-600">{user._count?.bookings || 0}</TableCell>
+                                <TableCell>
+                                    <div className="space-y-1 text-sm font-bold text-slate-600">
+                                        <div>{user._count?.bookings || 0} bookings</div>
+                                        <div>{user._count?.assignedTrips || 0} assigned trips</div>
+                                    </div>
+                                </TableCell>
                                 <TableCell className="text-slate-500 text-sm">{new Date(user.createdAt).toLocaleDateString()}</TableCell>
                                 <TableCell className="text-right">
                                     <DropdownMenu>
@@ -304,6 +333,9 @@ export default function AdminUsersPage() {
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end">
                                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                            <DropdownMenuItem onClick={() => openDetails(user)}>
+                                                <Eye className="mr-2 h-4 w-4" /> View Details
+                                            </DropdownMenuItem>
                                             <DropdownMenuItem onClick={() => {
                                                 setSelectedUser(user)
                                                 setNewRole(user.role)
@@ -330,6 +362,135 @@ export default function AdminUsersPage() {
                     </TableBody>
                 </Table>
             </div>
+
+            {/* User Details Dialog */}
+            <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
+                <DialogContent className="max-h-[85vh] max-w-5xl overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-3">
+                            <span>{selectedUser?.name || selectedUser?.email || "User details"}</span>
+                            {selectedUser?.role && roleBadge(selectedUser.role)}
+                        </DialogTitle>
+                        <DialogDescription>
+                            Profile, current trips, traveller bookings, and payment details.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    {selectedUser && (
+                        <div className="space-y-6">
+                            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+                                <div className="rounded-lg border border-slate-200 p-4">
+                                    <div className="mb-1 flex items-center gap-2 text-xs font-black uppercase text-slate-400">
+                                        <Mail className="h-3.5 w-3.5" /> Email
+                                    </div>
+                                    <div className="break-all text-sm font-bold text-slate-900">{selectedUser.email}</div>
+                                </div>
+                                <div className="rounded-lg border border-slate-200 p-4">
+                                    <div className="mb-1 flex items-center gap-2 text-xs font-black uppercase text-slate-400">
+                                        <Phone className="h-3.5 w-3.5" /> Phone
+                                    </div>
+                                    <div className="text-sm font-bold text-slate-900">{selectedUser.phone || "--"}</div>
+                                </div>
+                                <div className="rounded-lg border border-slate-200 p-4">
+                                    <div className="mb-1 flex items-center gap-2 text-xs font-black uppercase text-slate-400">
+                                        <CalendarDays className="h-3.5 w-3.5" /> Joined
+                                    </div>
+                                    <div className="text-sm font-bold text-slate-900">{formatDate(selectedUser.createdAt)}</div>
+                                </div>
+                                <div className="rounded-lg border border-slate-200 p-4">
+                                    <div className="mb-1 text-xs font-black uppercase text-slate-400">Profile</div>
+                                    <div className="text-sm font-bold text-slate-900">
+                                        {selectedUser.emailVerified ? "Email verified" : "Email not verified"}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {selectedUser.role === "DRIVER" && (
+                                <div className="grid gap-3 md:grid-cols-3">
+                                    <div className="rounded-lg border border-blue-100 bg-blue-50 p-4">
+                                        <div className="text-xs font-black uppercase text-blue-500">License number</div>
+                                        <div className="mt-1 text-sm font-bold text-slate-900">{selectedUser.licenseNumber || "--"}</div>
+                                    </div>
+                                    <div className="rounded-lg border border-blue-100 bg-blue-50 p-4">
+                                        <div className="text-xs font-black uppercase text-blue-500">Driver status</div>
+                                        <div className="mt-1 text-sm font-bold text-slate-900">{selectedUser.isVerified ? "Verified" : "Not verified"}</div>
+                                    </div>
+                                    <div className="rounded-lg border border-blue-100 bg-blue-50 p-4">
+                                        <div className="text-xs font-black uppercase text-blue-500">Assigned trips</div>
+                                        <div className="mt-1 text-sm font-bold text-slate-900">{selectedUser._count?.assignedTrips || 0}</div>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="grid gap-6 lg:grid-cols-2">
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-2 font-black text-slate-900">
+                                        <Route className="h-4 w-4 text-blue-600" /> Current Driver Trips
+                                    </div>
+                                    {selectedUser.assignedTrips?.length ? (
+                                        <div className="space-y-3">
+                                            {selectedUser.assignedTrips.map((trip: any) => (
+                                                <div key={trip.id} className="rounded-lg border border-slate-200 p-4">
+                                                    <div className="flex items-start justify-between gap-3">
+                                                        <div>
+                                                            <div className="font-bold text-slate-900">{trip.route?.name || "Route"}</div>
+                                                            <div className="mt-1 text-sm text-slate-500">{trip.bus?.registrationNo || "No bus"} / {trip.bus?.type || "Bus"}</div>
+                                                        </div>
+                                                        {statusBadge(trip.status)}
+                                                    </div>
+                                                    <div className="mt-3 grid gap-2 text-xs font-bold text-slate-500 md:grid-cols-2">
+                                                        <div>Departure: {formatDate(trip.departureTime)}</div>
+                                                        <div>Arrival: {formatDate(trip.arrivalTime)}</div>
+                                                        <div>Bookings: {trip._count?.bookings || 0}</div>
+                                                        <div>Price: {formatCurrency(trip.basePrice)}</div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="rounded-lg border border-dashed border-slate-200 p-6 text-center text-sm font-bold text-slate-400">
+                                            No assigned trips found.
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-2 font-black text-slate-900">
+                                        <CreditCard className="h-4 w-4 text-emerald-600" /> Traveller Bookings & Payments
+                                    </div>
+                                    {selectedUser.bookings?.length ? (
+                                        <div className="space-y-3">
+                                            {selectedUser.bookings.map((booking: any) => (
+                                                <div key={booking.id} className="rounded-lg border border-slate-200 p-4">
+                                                    <div className="flex items-start justify-between gap-3">
+                                                        <div>
+                                                            <div className="font-bold text-slate-900">{booking.trip?.route?.name || "Route"}</div>
+                                                            <div className="mt-1 text-sm text-slate-500">{booking._count?.tickets || 0} tickets / {formatCurrency(booking.totalAmount)}</div>
+                                                        </div>
+                                                        {statusBadge(booking.status)}
+                                                    </div>
+                                                    <div className="mt-3 grid gap-2 text-xs font-bold text-slate-500 md:grid-cols-2">
+                                                        <div>Booked: {formatDate(booking.bookingDate || booking.createdAt)}</div>
+                                                        <div>Trip: {formatDate(booking.trip?.departureTime)}</div>
+                                                        <div>Payment: {booking.payment?.status || booking.paymentStatus || "PENDING"}</div>
+                                                        <div>Method: {booking.payment?.method || "--"}</div>
+                                                        <div>Paid: {formatCurrency(booking.payment?.amount, booking.payment?.currency || "LKR")}</div>
+                                                        <div>Bus: {booking.trip?.bus?.registrationNo || "--"}</div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="rounded-lg border border-dashed border-slate-200 p-6 text-center text-sm font-bold text-slate-400">
+                                            No traveller bookings found.
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
 
             {/* Change Role Dialog */}
             <Dialog open={showRoleDialog} onOpenChange={setShowRoleDialog}>

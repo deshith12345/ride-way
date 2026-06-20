@@ -28,11 +28,40 @@ function loginUrlFor(req: any, targetPath: string) {
 function redirectToLoginAndClearSession(req: any, targetPath: string) {
     const loginUrl = loginUrlFor(req, targetPath)
     const response = NextResponse.redirect(loginUrl)
-    clearSessionCookies(response)
+    clearSessionCookies(response, req)
     return response
 }
 
-function clearSessionCookies(response: NextResponse) {
+function redirectToCurrentPathAndClearSession(req: any) {
+    const url = new URL(`${req.nextUrl.pathname}${req.nextUrl.search}`, requestOrigin(req))
+    const response = NextResponse.redirect(url)
+    clearSessionCookies(response, req)
+    return response
+}
+
+function unauthorizedAndClearSession(req: any) {
+    const response = NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    clearSessionCookies(response, req)
+    return response
+}
+
+function cookieDomainCandidates(req?: any) {
+    const hostname = (req?.headers.get("host") || req?.nextUrl?.host || "").split(":")[0].toLowerCase()
+    if (!hostname || hostname === "localhost" || hostname.endsWith(".localhost")) return []
+
+    const parts = hostname.split(".")
+    const candidates = new Set<string>([hostname])
+
+    if (parts.length > 2) {
+        const parent = parts.slice(1).join(".")
+        candidates.add(parent)
+        candidates.add(`.${parent}`)
+    }
+
+    return Array.from(candidates)
+}
+
+function clearSessionCookies(response: NextResponse, req?: any) {
     const authCookieNames = [
         "authjs.session-token",
         "__Secure-authjs.session-token",
@@ -44,7 +73,14 @@ function clearSessionCookies(response: NextResponse) {
         "__Secure-next-auth.callback-url",
     ]
 
-    authCookieNames.forEach((name) => response.cookies.delete(name))
+    const domains = cookieDomainCandidates(req)
+    authCookieNames.forEach((name) => {
+        response.cookies.delete(name)
+        response.cookies.set(name, "", { expires: new Date(0), maxAge: 0, path: "/" })
+        domains.forEach((domain) => {
+            response.cookies.set(name, "", { domain, expires: new Date(0), maxAge: 0, path: "/" })
+        })
+    })
     return response
 }
 
@@ -57,11 +93,18 @@ function redirectToRolePortal(req: any, role?: string | null) {
     return redirectToPath(req, portalPathForRole(role))
 }
 
+function expectedRoleForPortal(portal: ReturnType<typeof getPortalFromHost>) {
+    if (portal === "admin") return "ADMIN"
+    if (portal === "driver") return "DRIVER"
+    return "TRAVELLER"
+}
+
 const proxy = auth((req) => {
     const { pathname } = req.nextUrl
     const portal = getPortalFromHost(req.headers.get("host"))
     const isLoggedIn = !!req.auth
     const userRole = normalizeRole(req.auth?.user?.role)
+    const expectedPortalRole = expectedRoleForPortal(portal)
 
     const publicRoutes = [
         "/",
@@ -88,6 +131,7 @@ const proxy = auth((req) => {
 
     const authRoutes = ["/login", "/register"]
     const isAuthRoute = authRoutes.includes(pathname)
+    const isAuthApiRoute = pathname.startsWith("/api/auth")
     const callbackUrl = req.nextUrl.searchParams.get("callbackUrl") || ""
     const callbackRole = callbackUrl.startsWith("/admin")
         ? "ADMIN"
@@ -95,8 +139,19 @@ const proxy = auth((req) => {
             ? "DRIVER"
             : null
 
-    if (pathname === "/register" && isLoggedIn) {
-        return clearSessionCookies(NextResponse.next())
+    if (isLoggedIn && (!userRole || userRole !== expectedPortalRole) && !isAuthApiRoute && pathname !== "/auth/error") {
+        if (pathname.startsWith("/api")) {
+            return unauthorizedAndClearSession(req)
+        }
+
+        if (isAuthRoute || portal === "public") {
+            return redirectToCurrentPathAndClearSession(req)
+        }
+
+        return redirectToLoginAndClearSession(
+            req,
+            portal === "admin" ? "/admin/dashboard" : "/driver/dashboard"
+        )
     }
 
     if (portal === "admin" && pathname === "/") {
@@ -117,11 +172,11 @@ const proxy = auth((req) => {
 
     if (isAuthRoute && isLoggedIn) {
         if (callbackRole && userRole !== callbackRole) {
-            return clearSessionCookies(NextResponse.next())
+            return clearSessionCookies(NextResponse.next(), req)
         }
 
         if (!userRole) {
-            return clearSessionCookies(NextResponse.next())
+            return clearSessionCookies(NextResponse.next(), req)
         }
 
         return redirectToRolePortal(req, userRole)
