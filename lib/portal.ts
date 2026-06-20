@@ -5,11 +5,11 @@ export type PortalKind = "admin" | "driver" | "public"
 export function getPortalFromHost(host: string | null): PortalKind {
   const hostname = (host || "").split(":")[0].toLowerCase()
 
-  if (hostname === "admin.localhost" || hostname.startsWith("admin.")) {
+  if (hostname.startsWith("admin.")) {
     return "admin"
   }
 
-  if (hostname === "driver.localhost" || hostname.startsWith("driver.")) {
+  if (hostname.startsWith("driver.")) {
     return "driver"
   }
 

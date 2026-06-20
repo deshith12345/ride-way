@@ -167,7 +167,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
           const existingRole = normalizeRole(existingUser?.role)
 
-          if (!existingUser || existingRole !== "TRAVELLER" || existingUser.password) {
+          if (!existingUser || !existingRole) {
             return false
           }
 

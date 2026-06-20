@@ -2,35 +2,24 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+Install dependencies and build the app before deploying:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Deploy the project to Vercel and open the production URL from your Vercel dashboard.
 
 ## Google Sign In
 
-RideWay supports Google authentication for existing Google-linked traveller accounts. New RideWay accounts are created with the password form on `/register`.
+RideWay supports Google authentication for existing verified admin, driver, and traveller accounts. New RideWay accounts are created with the password form on `/register`.
 
 1. Create OAuth credentials in Google Cloud Console.
 2. Add this authorized redirect URI:
 
 ```text
-http://localhost:3000/api/auth/callback/google
-```
-
-For production, add your deployed callback too:
-
-```text
-https://your-domain.com/api/auth/callback/google
+https://your-vercel-domain.vercel.app/api/auth/callback/google
 ```
 
 3. Copy `env.example` values into your local `.env.local` and set:
@@ -38,7 +27,7 @@ https://your-domain.com/api/auth/callback/google
 ```text
 GOOGLE_CLIENT_ID="your-google-client-id"
 GOOGLE_CLIENT_SECRET="your-google-client-secret"
-NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_URL="https://your-vercel-domain.vercel.app"
 NEXTAUTH_SECRET="replace-with-a-long-random-secret"
 ```
 

@@ -13,7 +13,7 @@ function matchesRoute(pathname: string, route: string) {
 function requestOrigin(req: any) {
     const host = req.headers.get("host") || req.nextUrl.host
     const forwardedProto = req.headers.get("x-forwarded-proto")
-    const protocol = forwardedProto || (host.startsWith("localhost") || host.startsWith("127.") ? "http" : "https")
+    const protocol = forwardedProto || "https"
 
     return `${protocol}://${host}`
 }
