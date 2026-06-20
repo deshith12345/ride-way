@@ -232,8 +232,9 @@ function SettingsPage() {
                                     </DialogHeader>
 
                                     {error && (
-                                        <div className="p-4 bg-rose-50 border border-rose-100 text-rose-600 rounded-2xl text-sm font-bold my-4">
-                                            ⚠️ {error}
+                                        <div className="my-4 flex items-center gap-2 rounded-2xl border border-rose-100 bg-rose-50 p-4 text-sm font-bold text-rose-600">
+                                            <ShieldAlert className="h-4 w-4 shrink-0" />
+                                            {error}
                                         </div>
                                     )}
 

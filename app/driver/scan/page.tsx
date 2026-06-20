@@ -17,6 +17,16 @@ export default function ScanTicketPage() {
         const code = rawCode.trim()
 
         try {
+            const url = new URL(code, window.location.origin)
+            const encodedTicket = url.searchParams.get("v")
+            if (url.pathname === "/ticket/verify" && encodedTicket) {
+                return { v: encodedTicket }
+            }
+        } catch {
+            // Non-URL QR values are handled below.
+        }
+
+        try {
             const parsed = JSON.parse(code)
             if (parsed?.type === "RIDEWAY_BOOKING_TICKET") {
                 return {

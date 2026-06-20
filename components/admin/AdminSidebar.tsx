@@ -18,7 +18,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import BrandLogo from "@/components/shared/BrandLogo"
 
 const sidebarItems = [
@@ -35,11 +35,35 @@ export default function AdminSidebar() {
     const pathname = usePathname()
     const { data: session } = useSession()
     const [collapsed, setCollapsed] = useState(false)
+    const [supportOpenCount, setSupportOpenCount] = useState(0)
 
     const user = session?.user
     const initials = user?.name
         ? user.name.split(" ").map(n => n[0]).join("").toUpperCase()
         : user?.email?.[0].toUpperCase() || "A"
+
+    const loadSupportOpenCount = useCallback(async () => {
+        if (session?.user?.role !== "ADMIN") return
+
+        try {
+            const response = await fetch("/api/support/conversations", { cache: "no-store" })
+            if (!response.ok) return
+            const data = await response.json()
+
+            if (Array.isArray(data)) {
+                setSupportOpenCount(data.filter((conversation) => conversation.status === "OPEN").length)
+            }
+        } catch {
+            setSupportOpenCount(0)
+        }
+    }, [session?.user?.role])
+
+    useEffect(() => {
+        loadSupportOpenCount()
+        const timer = window.setInterval(loadSupportOpenCount, 5000)
+
+        return () => window.clearInterval(timer)
+    }, [loadSupportOpenCount])
 
     return (
         <aside className={cn(
@@ -71,12 +95,27 @@ export default function AdminSidebar() {
                                     : "text-slate-500 hover:bg-slate-50 hover:text-blue-600"
                             )}
                         >
-                            <item.icon className={cn(
-                                "h-5 w-5 transition-colors",
-                                isActive ? "text-white" : "text-slate-400 group-hover:text-blue-600"
-                            )} />
+                            <span className="relative flex shrink-0">
+                                <item.icon className={cn(
+                                    "h-5 w-5 transition-colors",
+                                    isActive ? "text-white" : "text-slate-400 group-hover:text-blue-600"
+                                )} />
+                                {item.name === "Support" && supportOpenCount > 0 && (
+                                    <span className="absolute -right-2.5 -top-2.5 flex min-h-5 min-w-5 items-center justify-center rounded-full border-2 border-white bg-rose-600 px-1 text-[10px] font-black leading-none text-white shadow-lg shadow-rose-200">
+                                        {supportOpenCount > 99 ? "99+" : supportOpenCount}
+                                    </span>
+                                )}
+                            </span>
                             {!collapsed && <span>{item.name}</span>}
-                            {!collapsed && isActive && (
+                            {!collapsed && item.name === "Support" && supportOpenCount > 0 && (
+                                <span className={cn(
+                                    "ml-auto rounded-full px-2 py-0.5 text-[10px] font-black",
+                                    isActive ? "bg-white text-rose-600" : "bg-rose-600 text-white"
+                                )}>
+                                    {supportOpenCount > 99 ? "99+" : supportOpenCount}
+                                </span>
+                            )}
+                            {!collapsed && isActive && item.name !== "Support" && (
                                 <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white opacity-50"></div>
                             )}
                         </Link>

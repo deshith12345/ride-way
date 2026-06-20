@@ -169,7 +169,14 @@ export default function AdminSupportInbox() {
       <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
         <div>
           <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-xs font-black uppercase tracking-widest text-blue-700">
-            <MessageCircle className="h-4 w-4" />
+            <span className="relative flex">
+              <MessageCircle className="h-4 w-4" />
+              {openCount > 0 && (
+                <span className="absolute -right-3 -top-3 flex min-h-5 min-w-5 items-center justify-center rounded-full border-2 border-white bg-rose-600 px-1 text-[10px] font-black leading-none text-white shadow-lg shadow-rose-200">
+                  {openCount > 99 ? "99+" : openCount}
+                </span>
+              )}
+            </span>
             Support Inbox
           </div>
           <h1 className="text-3xl font-black tracking-tight text-slate-900">Live Chat Support</h1>
