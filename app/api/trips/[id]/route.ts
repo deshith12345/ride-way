@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
+import { normalizeRole } from '@/lib/authz';
 
 export async function GET(
     req: Request,
@@ -34,7 +35,8 @@ export async function PATCH(
 ) {
     try {
         const session = await auth();
-        if (!session?.user || !['ADMIN', 'DRIVER'].includes(session.user.role)) {
+        const role = normalizeRole(session?.user?.role);
+        if (!session?.user || !role || !['ADMIN', 'DRIVER'].includes(role)) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
@@ -54,7 +56,7 @@ export async function PATCH(
             return NextResponse.json({ error: 'Trip not found' }, { status: 404 });
         }
 
-        if (session.user.role === 'DRIVER' && trip.driverId !== session.user.id) {
+        if (role === 'DRIVER' && trip.driverId !== session.user.id) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 

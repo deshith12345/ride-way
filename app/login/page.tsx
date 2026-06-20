@@ -71,12 +71,13 @@ function LoginContent() {
             const result = await signIn("credentials", {
                 email: formData.email,
                 password: formData.password,
+                roleRequired: requiredRole || "",
                 redirect: false,
                 redirectTo,
             })
 
             if (result?.error) {
-                setError("Invalid email or password.")
+                setError(requiredRole ? `Use a ${requiredRole} account to continue.` : "Invalid email or password.")
                 setLoading(false)
                 return
             }

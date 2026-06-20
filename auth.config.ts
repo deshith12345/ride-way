@@ -2,6 +2,7 @@
 import type { NextAuthConfig } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { getGoogleProvider } from "@/lib/auth-providers"
+import { normalizeRole } from "@/lib/authz"
 
 const providers = []
 const googleProvider = getGoogleProvider()
@@ -51,20 +52,26 @@ export const authConfig = {
         },
         async jwt({ token, user }) {
             if (user) {
-                token.role = (user as any).role
+                const role = normalizeRole((user as any).role)
+                if (role) token.role = role
                 token.id = user.id
             }
 
-            if (token.role) {
-                token.role = (token.role as string).toUpperCase()
-            }
+            const tokenRole = normalizeRole(token.role)
+            if (tokenRole) token.role = tokenRole
+            else delete token.role
 
             return token
         },
         async session({ session, token }) {
             if (session.user && token) {
-                session.user.role = (token.role as string)?.toUpperCase()
-                session.user.id = token.id as string
+                const role = normalizeRole(token.role)
+                if (role) session.user.role = role
+                else delete (session.user as any).role
+
+                if (typeof token.id === "string") {
+                    session.user.id = token.id
+                }
             }
             return session
         },

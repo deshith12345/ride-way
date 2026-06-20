@@ -1,9 +1,9 @@
 
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { getProviders, signIn } from "next-auth/react"
+import { signOut } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -34,13 +34,6 @@ export default function RegisterPage() {
   })
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
-  const [googleEnabled, setGoogleEnabled] = useState(false)
-
-  useEffect(() => {
-    getProviders().then((providers) => {
-      setGoogleEnabled(Boolean(providers?.google))
-    })
-  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -77,6 +70,7 @@ export default function RegisterPage() {
         throw new Error(data.error || "Registration failed")
       }
 
+      await signOut({ redirect: false })
       router.push("/login?registered=true")
     } catch (err: any) {
       setError(err.message || "Something went wrong")
@@ -266,17 +260,6 @@ export default function RegisterPage() {
           </p>
 
           <div className="mt-6 flex flex-col items-center gap-4">
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full h-12 rounded-xl border-slate-200 font-bold text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-3 shadow-sm transition-all active:scale-95"
-              disabled={!googleEnabled}
-              onClick={() => signIn("google", { redirectTo: "/dashboard" }, { prompt: "select_account" })}
-            >
-              <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" className="w-5 h-5" alt="Google" />
-              {googleEnabled ? "Register with Google" : "Google registration unavailable"}
-            </Button>
-
             <Link href="/login" className="w-full">
               <Button variant="outline" className="w-full px-8 h-12 rounded-xl border-slate-200 font-bold text-slate-600 hover:bg-slate-50 transition-all">
                 Sign in to your account

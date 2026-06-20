@@ -4,9 +4,9 @@ import { authConfig } from "./auth.config"
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 import { PrismaAdapter } from "@auth/prisma-adapter"
-import { UserRole } from "@prisma/client"
 import type { Provider } from "next-auth/providers"
 import { getGoogleProvider } from "@/lib/auth-providers"
+import { normalizeRole } from "@/lib/authz"
 
 const providers: Provider[] = []
 const googleProvider = getGoogleProvider()
@@ -84,6 +84,7 @@ providers.push(
     credentials: {
       email: { label: "Email", type: "email" },
       password: { label: "Password", type: "password" },
+      roleRequired: { label: "Required role", type: "text" },
     },
     async authorize(credentials, request) {
       if (!credentials?.email || !credentials?.password) {
@@ -91,6 +92,14 @@ providers.push(
       }
 
       const email = (credentials.email as string).trim().toLowerCase()
+      const requestedRole =
+        typeof credentials.roleRequired === "string"
+          ? credentials.roleRequired.trim()
+          : ""
+      const requiredRole = requestedRole ? normalizeRole(requestedRole) : null
+
+      if (requestedRole && !requiredRole) return null
+
       const loginAttemptKey = getLoginAttemptKey(email, request)
       if (!isLoginAllowed(loginAttemptKey)) return null
 
@@ -115,13 +124,17 @@ providers.push(
         return null
       }
 
+      if (requiredRole && normalizeRole(user.role) !== requiredRole) {
+        return null
+      }
+
       clearFailedLogins(loginAttemptKey)
 
       return {
         id: user.id,
         email: user.email,
         name: user.name,
-        role: user.role,
+        role: normalizeRole(user.role) ?? undefined,
       }
     },
   })
@@ -145,24 +158,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
           const existingUser = await prisma.user.findUnique({
             where: { email },
+            select: {
+              id: true,
+              role: true,
+              password: true,
+            },
           })
 
-          if (existingUser) {
-            user.role = existingUser.role
-            user.id = existingUser.id
-          } else {
-            const newUser = await prisma.user.create({
-              data: {
-                email,
-                name: user.name,
-                image: user.image,
-                role: UserRole.TRAVELLER,
-              }
-            })
-            
-            user.role = newUser.role
-            user.id = newUser.id
+          const existingRole = normalizeRole(existingUser?.role)
+
+          if (!existingUser || existingRole !== "TRAVELLER" || existingUser.password) {
+            return false
           }
+
+          user.role = existingRole
+          user.id = existingUser.id
         }
         return true
       } catch (error) {
@@ -184,8 +194,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         })
 
         if (dbUser) {
+          const role = normalizeRole(dbUser.role)
           token.id = dbUser.id
-          token.role = dbUser.role
+          if (role) token.role = role
+          else delete token.role
         }
       }
 

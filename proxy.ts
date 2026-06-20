@@ -2,6 +2,7 @@ import NextAuth from "next-auth"
 import { NextResponse } from "next/server"
 import { authConfig } from "./auth.config"
 import { getPortalFromHost, portalPathForRole } from "@/lib/portal"
+import { isPortalRole, normalizeRole } from "@/lib/authz"
 
 const { auth } = NextAuth(authConfig)
 
@@ -35,8 +36,12 @@ function clearSessionCookies(response: NextResponse) {
     const authCookieNames = [
         "authjs.session-token",
         "__Secure-authjs.session-token",
+        "authjs.callback-url",
+        "__Secure-authjs.callback-url",
         "next-auth.session-token",
         "__Secure-next-auth.session-token",
+        "next-auth.callback-url",
+        "__Secure-next-auth.callback-url",
     ]
 
     authCookieNames.forEach((name) => response.cookies.delete(name))
@@ -56,7 +61,7 @@ const proxy = auth((req) => {
     const { pathname } = req.nextUrl
     const portal = getPortalFromHost(req.headers.get("host"))
     const isLoggedIn = !!req.auth
-    const userRole = req.auth?.user?.role?.toUpperCase()
+    const userRole = normalizeRole(req.auth?.user?.role)
 
     const publicRoutes = [
         "/",
@@ -90,6 +95,10 @@ const proxy = auth((req) => {
             ? "DRIVER"
             : null
 
+    if (pathname === "/register" && isLoggedIn) {
+        return clearSessionCookies(NextResponse.next())
+    }
+
     if (portal === "admin" && pathname === "/") {
         return redirectToPath(req, "/admin/dashboard")
     }
@@ -111,19 +120,23 @@ const proxy = auth((req) => {
             return clearSessionCookies(NextResponse.next())
         }
 
+        if (!userRole) {
+            return clearSessionCookies(NextResponse.next())
+        }
+
         return redirectToRolePortal(req, userRole)
     }
 
     if (isLoggedIn) {
-        if (pathname.startsWith("/admin") && userRole !== "ADMIN") {
+        if (pathname.startsWith("/admin") && userRole && userRole !== "ADMIN") {
             return redirectToLoginAndClearSession(req, `${pathname}${req.nextUrl.search}`)
         }
 
-        if (pathname.startsWith("/driver") && userRole !== "DRIVER") {
+        if (pathname.startsWith("/driver") && userRole && userRole !== "DRIVER") {
             return redirectToLoginAndClearSession(req, `${pathname}${req.nextUrl.search}`)
         }
 
-        if (pathname === "/dashboard" && (userRole === "ADMIN" || userRole === "DRIVER")) {
+        if (pathname === "/dashboard" && isPortalRole(userRole)) {
             return redirectToRolePortal(req, userRole)
         }
     }

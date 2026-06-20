@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
+import { normalizeRole, type AppRole } from "@/lib/authz"
 
 const MAX_MESSAGE_LENGTH = 1200
 
@@ -23,7 +24,7 @@ function messageInclude() {
   }
 }
 
-async function getAllowedConversation(id: string, userId: string, role: string) {
+async function getAllowedConversation(id: string, userId: string, role: AppRole) {
   return prisma.supportConversation.findFirst({
     where: role === "ADMIN" ? { id } : { id, userId },
     select: {
@@ -45,8 +46,13 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const role = normalizeRole(session.user.role)
+    if (!role) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
     const { id } = await props.params
-    const conversation = await getAllowedConversation(id, session.user.id, session.user.role)
+    const conversation = await getAllowedConversation(id, session.user.id, role)
 
     if (!conversation) {
       return NextResponse.json({ error: "Conversation not found" }, { status: 404 })
@@ -76,8 +82,13 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const role = normalizeRole(session.user.role)
+    if (!role) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
     const { id } = await props.params
-    const conversation = await getAllowedConversation(id, session.user.id, session.user.role)
+    const conversation = await getAllowedConversation(id, session.user.id, role)
 
     if (!conversation) {
       return NextResponse.json({ error: "Conversation not found" }, { status: 404 })
@@ -90,7 +101,7 @@ export async function POST(
       return NextResponse.json({ error: "Message is required" }, { status: 400 })
     }
 
-    const isAdmin = session.user.role === "ADMIN"
+    const isAdmin = role === "ADMIN"
     const now = new Date()
     const message = await prisma.supportMessage.create({
       data: {

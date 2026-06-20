@@ -16,9 +16,9 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## Google Sign In / Sign Up
+## Google Sign In
 
-RideWay supports Google authentication for traveller sign in and sign up.
+RideWay supports Google authentication for existing Google-linked traveller accounts. New RideWay accounts are created with the password form on `/register`.
 
 1. Create OAuth credentials in Google Cloud Console.
 2. Add this authorized redirect URI:
@@ -42,7 +42,7 @@ NEXTAUTH_URL="http://localhost:3000"
 NEXTAUTH_SECRET="replace-with-a-long-random-secret"
 ```
 
-After those values are set, the Google buttons on `/login` and `/register` become active.
+After those values are set, the Google button on `/login` becomes active.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 

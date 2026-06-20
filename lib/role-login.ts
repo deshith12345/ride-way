@@ -1,4 +1,4 @@
-export type PortalRole = "ADMIN" | "DRIVER"
+import type { PortalRole } from "@/lib/authz"
 
 export function roleLoginPath(role: PortalRole, callbackUrl: string, switchAccount = false) {
     const params = new URLSearchParams({

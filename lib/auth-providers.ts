@@ -14,7 +14,6 @@ export function getGoogleProvider(): Provider | null {
   return GoogleProvider({
     clientId: googleClientId,
     clientSecret: googleClientSecret,
-    allowDangerousEmailAccountLinking: true,
     profile(profile) {
       return {
         id: profile.sub,
