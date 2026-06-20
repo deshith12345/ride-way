@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { ArrowLeft, CheckCircle2, Loader2, QrCode, XCircle } from "lucide-react"
+import { AlertTriangle, ArrowLeft, CheckCircle2, Loader2, QrCode, XCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -18,6 +18,18 @@ export default function ScanTicketPage() {
 
         try {
             const parsed = JSON.parse(code)
+            if (parsed?.type === "RIDEWAY_BOOKING_TICKET") {
+                return {
+                    bookingId: parsed.bookingId,
+                    tickets: Array.isArray(parsed.tickets) ? parsed.tickets : [],
+                }
+            }
+            if (parsed?.type === "RIDEWAY_TICKET") {
+                return {
+                    ticketId: parsed.ticketId || parsed.id,
+                    qrCode: parsed.qrCode,
+                }
+            }
             if (typeof parsed?.qrCode === "string") return { qrCode: parsed.qrCode }
             if (typeof parsed?.id === "string") return { ticketId: parsed.id }
         } catch {
@@ -100,7 +112,7 @@ export default function ScanTicketPage() {
                 </Card>
 
                 {result && (
-                    <Card className={`rounded-3xl border-2 shadow-md ${result.valid ? "border-emerald-200 bg-emerald-50/50" : "border-rose-200 bg-rose-50/50"}`}>
+                    <Card className={`rounded-3xl border-2 shadow-md ${result.valid ? "border-emerald-200 bg-emerald-50/50" : result.authentic ? "border-amber-200 bg-amber-50/50" : "border-rose-200 bg-rose-50/50"}`}>
                         <CardContent className="space-y-4 p-6 text-center">
                             {result.valid ? (
                                 <>
@@ -108,37 +120,59 @@ export default function ScanTicketPage() {
                                         <CheckCircle2 className="h-8 w-8 text-emerald-600" />
                                     </div>
                                     <div>
-                                        <h3 className="text-xl font-black text-emerald-700">Valid Ticket</h3>
-                                        <p className="mt-1 font-medium text-emerald-600">Passenger checked in successfully</p>
+                                        <h3 className="text-xl font-black text-emerald-700">Authentic Ticket</h3>
+                                        <p className="mt-1 font-medium text-emerald-600">{result.message || "Passengers checked in successfully"}</p>
                                     </div>
-                                    {result.ticket && (
+                                    {result.booking && (
                                         <div className="space-y-2 rounded-2xl border border-emerald-100 bg-white p-4 text-left">
                                             <div className="flex justify-between gap-4">
-                                                <span className="text-sm text-slate-500">Passenger</span>
-                                                <span className="font-bold text-slate-900">{result.ticket.passengerName || result.ticket.passenger}</span>
+                                                <span className="text-sm text-slate-500">Route</span>
+                                                <span className="font-bold text-slate-900">{result.booking.route}</span>
                                             </div>
                                             <div className="flex justify-between gap-4">
-                                                <span className="text-sm text-slate-500">Seat</span>
-                                                <span className="font-bold text-slate-900">{result.ticket.seatNumber}</span>
+                                                <span className="text-sm text-slate-500">Bus</span>
+                                                <span className="font-bold text-slate-900">{result.booking.busNumber || "--"}</span>
                                             </div>
-                                            {result.ticket.route && (
-                                                <div className="flex justify-between gap-4">
-                                                    <span className="text-sm text-slate-500">Route</span>
-                                                    <span className="font-bold text-slate-900">{result.ticket.route}</span>
+                                        </div>
+                                    )}
+                                    {Array.isArray(result.tickets) && result.tickets.length > 0 && (
+                                        <div className="space-y-2 rounded-2xl border border-emerald-100 bg-white p-4 text-left">
+                                            <p className="text-xs font-black uppercase tracking-widest text-slate-400">Checked-in seats</p>
+                                            {result.tickets.map((ticket: any) => (
+                                                <div key={ticket.id} className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3 py-2 text-sm">
+                                                    <span className="truncate font-bold text-slate-900">{ticket.passengerName}</span>
+                                                    <span className="rounded-lg bg-emerald-600 px-2 py-1 text-xs font-black text-white">Seat {ticket.seatNumber}</span>
                                                 </div>
-                                            )}
+                                            ))}
                                         </div>
                                     )}
                                 </>
                             ) : (
                                 <>
-                                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-rose-100">
-                                        <XCircle className="h-8 w-8 text-rose-600" />
+                                    <div className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full ${result.authentic ? "bg-amber-100" : "bg-rose-100"}`}>
+                                        {result.authentic ? (
+                                            <AlertTriangle className="h-8 w-8 text-amber-600" />
+                                        ) : (
+                                            <XCircle className="h-8 w-8 text-rose-600" />
+                                        )}
                                     </div>
                                     <div>
-                                        <h3 className="text-xl font-black text-rose-700">Invalid Ticket</h3>
-                                        <p className="mt-1 font-medium text-rose-600">{result.error}</p>
+                                        <h3 className={`text-xl font-black ${result.authentic ? "text-amber-700" : "text-rose-700"}`}>
+                                            {result.authentic ? "Authentic But Not Usable" : "Fake / Not Found"}
+                                        </h3>
+                                        <p className={`mt-1 font-medium ${result.authentic ? "text-amber-700" : "text-rose-600"}`}>{result.error}</p>
                                     </div>
+                                    {Array.isArray(result.tickets) && result.tickets.length > 0 && (
+                                        <div className="space-y-2 rounded-2xl border border-white bg-white p-4 text-left">
+                                            <p className="text-xs font-black uppercase tracking-widest text-slate-400">Ticket details</p>
+                                            {result.tickets.map((ticket: any) => (
+                                                <div key={ticket.id} className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3 py-2 text-sm">
+                                                    <span className="truncate font-bold text-slate-900">{ticket.passengerName}</span>
+                                                    <span className="rounded-lg bg-slate-200 px-2 py-1 text-xs font-black text-slate-600">Seat {ticket.seatNumber} / {ticket.status}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </>
                             )}
                             <Button

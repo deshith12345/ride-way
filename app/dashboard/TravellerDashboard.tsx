@@ -191,25 +191,26 @@ export default function TravellerDashboard() {
                                         </div>
 
                                         <div className="bg-slate-50/50 p-8 flex flex-col items-center justify-center md:w-64 border-t md:border-t-0 md:border-l border-slate-50 group-hover:bg-blue-50/20 transition-colors gap-3">
-                                            {booking.tickets.map((t: any) => (
-                                                <TicketDialog
-                                                    key={t.id}
-                                                    ticket={{
+                                            <TicketDialog
+                                                ticket={{
+                                                    id: booking.id,
+                                                    bookingId: booking.id,
+                                                    route: `${booking.trip.route.origin} - ${booking.trip.route.destination}`,
+                                                    departureDate: format(new Date(booking.trip.departureTime), 'MMM dd, yyyy'),
+                                                    departureTime: format(new Date(booking.trip.departureTime), 'hh:mm a'),
+                                                    origin: booking.trip.route.origin,
+                                                    destination: booking.trip.route.destination,
+                                                    busNumber: booking.trip.bus.registrationNo,
+                                                    busType: booking.trip.bus.type,
+                                                    passengers: booking.tickets.map((t: any) => ({
                                                         id: t.id,
                                                         seatNumber: t.seatNumber,
                                                         passengerName: t.passengerName,
-                                                        route: `${booking.trip.route.origin} - ${booking.trip.route.destination}`,
-                                                        departureDate: format(new Date(booking.trip.departureTime), 'MMM dd, yyyy'),
-                                                        departureTime: format(new Date(booking.trip.departureTime), 'hh:mm a'),
-                                                        origin: booking.trip.route.origin,
-                                                        destination: booking.trip.route.destination,
-                                                        busNumber: booking.trip.bus.registrationNo,
-                                                        busType: booking.trip.bus.type,
                                                         passengerGender: t.passengerGender,
                                                         qrCode: t.qrCode,
-                                                    }}
-                                                />
-                                            ))}
+                                                    })),
+                                                }}
+                                            />
                                             <Dialog>
                                                 <DialogTrigger asChild>
                                                     <Button variant="outline" className="w-full rounded-xl border-rose-200 text-rose-500 hover:bg-rose-50 font-bold mt-2 text-xs">
