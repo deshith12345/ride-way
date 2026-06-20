@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { BusFront, ShieldCheck } from "lucide-react"
+import { ShieldCheck } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 type BrandLogoProps = {
@@ -15,19 +15,19 @@ type BrandLogoProps = {
 const sizeStyles = {
     sm: {
         mark: "h-8 w-8 rounded-lg",
-        icon: "h-4 w-4",
+        image: "h-full w-full",
         text: "text-xl",
         subtitle: "text-[9px]",
     },
     md: {
         mark: "h-10 w-10 rounded-xl",
-        icon: "h-5 w-5",
+        image: "h-full w-full",
         text: "text-2xl",
         subtitle: "text-[10px]",
     },
     lg: {
         mark: "h-12 w-12 rounded-2xl",
-        icon: "h-7 w-7",
+        image: "h-full w-full",
         text: "text-3xl",
         subtitle: "text-[10px]",
     },
@@ -49,13 +49,17 @@ export default function BrandLogo({
         <div className={cn("flex items-center gap-3", className)}>
             <div
                 className={cn(
-                    "flex shrink-0 items-center justify-center bg-blue-600 text-white shadow-lg shadow-blue-200/60",
-                    isLight && "bg-white text-blue-600 shadow-slate-950/20",
+                    "flex shrink-0 items-center justify-center overflow-hidden bg-white shadow-lg shadow-blue-200/60",
+                    isLight && "shadow-slate-950/20",
                     styles.mark,
                     markClassName
                 )}
             >
-                <BusFront className={styles.icon} />
+                <img
+                    src="/brand/rideway-logo.png"
+                    alt="RideWay"
+                    className={cn("object-contain", styles.image)}
+                />
             </div>
             {showText && (
                 <div className="min-w-0">
