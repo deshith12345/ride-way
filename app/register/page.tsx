@@ -55,6 +55,14 @@ function RegisterContent() {
   const searchParams = useSearchParams()
   const role = normalizeRole(searchParams.get("roleRequired")) || "TRAVELLER"
   const roleConfig = roleConfigs[role]
+  const callbackUrl = safeCallbackUrl(searchParams.get("callbackUrl"), role)
+  const loginHref =
+    role === "TRAVELLER"
+      ? "/login"
+      : `/login?${new URLSearchParams({
+        callbackUrl,
+        roleRequired: role,
+      }).toString()}`
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -105,7 +113,7 @@ function RegisterContent() {
       await signOut({ redirect: false })
       const loginParams = new URLSearchParams({
         registered: "true",
-        callbackUrl: safeCallbackUrl(searchParams.get("callbackUrl"), role),
+        callbackUrl,
       })
       if (role !== "TRAVELLER") loginParams.set("roleRequired", role)
       router.push(`/login?${loginParams.toString()}`)
@@ -160,7 +168,7 @@ function RegisterContent() {
           {/* Mobile Branding */}
           <div className="lg:hidden mb-12 flex justify-between items-center">
             <BrandLogo href="/" size="sm" />
-            <Link href="/login" className="text-sm font-bold text-blue-600">Sign In</Link>
+            <Link href={loginHref} className="text-sm font-bold text-blue-600">Sign In</Link>
           </div>
 
           <div className="mb-10">
@@ -177,7 +185,7 @@ function RegisterContent() {
                 <p className="text-rose-900 font-black uppercase text-[10px] tracking-wider mb-1">Registration Error</p>
                 <p className="text-rose-600 leading-tight">{error}</p>
                 {error.includes("email") && (
-                  <Link href="/login" className="mt-2 inline-block text-blue-600 hover:underline">
+                  <Link href={loginHref} className="mt-2 inline-block text-blue-600 hover:underline">
                     Try logging in instead?
                   </Link>
                 )}
@@ -297,7 +305,7 @@ function RegisterContent() {
           </p>
 
           <div className="mt-6 flex flex-col items-center gap-4">
-            <Link href="/login" className="w-full">
+            <Link href={loginHref} className="w-full">
               <Button variant="outline" className="w-full px-8 h-12 rounded-xl border-slate-200 font-bold text-slate-600 hover:bg-slate-50 transition-all">
                 Sign in to your account
               </Button>

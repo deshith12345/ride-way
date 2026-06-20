@@ -107,11 +107,11 @@ const proxy = auth((req) => {
         return redirectToPath(req, "/driver/dashboard")
     }
 
-    if (portal === "admin" && !pathname.startsWith("/admin") && !pathname.startsWith("/api") && pathname !== "/login" && pathname !== "/auth/error") {
+    if (portal === "admin" && !pathname.startsWith("/admin") && !pathname.startsWith("/api") && pathname !== "/login" && pathname !== "/register" && pathname !== "/auth/error") {
         return redirectToPath(req, "/admin/dashboard")
     }
 
-    if (portal === "driver" && !pathname.startsWith("/driver") && !pathname.startsWith("/api") && pathname !== "/login" && pathname !== "/auth/error") {
+    if (portal === "driver" && !pathname.startsWith("/driver") && !pathname.startsWith("/api") && pathname !== "/login" && pathname !== "/register" && pathname !== "/auth/error") {
         return redirectToPath(req, "/driver/dashboard")
     }
 
