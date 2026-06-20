@@ -99,7 +99,6 @@ export default async function Home() {
   }[] = []
 
   try {
-    const now = new Date()
     const routeCards = await prisma.route.findMany({
       orderBy: { updatedAt: "desc" },
       take: 4,
@@ -109,7 +108,7 @@ export default async function Home() {
         destination: true,
         estimatedDuration: true,
         trips: {
-          where: { status: { in: bookableTripStatuses }, departureTime: { gte: now } },
+          where: { status: { in: bookableTripStatuses } },
           orderBy: { departureTime: "asc" },
           take: 1,
           select: {

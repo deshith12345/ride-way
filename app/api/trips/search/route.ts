@@ -28,9 +28,6 @@ export async function GET(req: Request) {
 
         const where: any = {
             status: { in: bookableTripStatuses },
-            departureTime: {
-                gte: new Date()
-            }
         };
 
         if (from || to) {
@@ -64,12 +61,7 @@ export async function GET(req: Request) {
                 return NextResponse.json({ error: 'Invalid travel date' }, { status: 400 });
             }
 
-            const now = new Date();
-
-            where.departureTime = {
-                gte: dayRange.startUtc > now ? dayRange.startUtc : now,
-                lt: dayRange.endUtc
-            };
+            where.departureTime = { gte: dayRange.startUtc, lt: dayRange.endUtc };
         }
 
         const trips = await prisma.trip.findMany({

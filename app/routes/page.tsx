@@ -16,6 +16,7 @@ interface Route {
   estimatedDuration: number;
   totalDistance: number;
   basePrice?: number;
+  nextTripDate?: string | null;
 }
 
 export default function RoutesPage() {
@@ -126,6 +127,11 @@ export default function RoutesPage() {
           ) : (
             filteredRoutes.map(route => {
               const hasScheduledBus = route.basePrice !== null && route.basePrice !== undefined
+              const bookingParams = new URLSearchParams({
+                from: route.origin.toLowerCase(),
+                to: route.destination.toLowerCase(),
+              })
+              if (route.nextTripDate) bookingParams.set("date", route.nextTripDate)
 
               return (
               <div key={route.id} className="group bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
@@ -157,7 +163,7 @@ export default function RoutesPage() {
                       <span className="text-2xl font-black text-blue-600">{hasScheduledBus ? `LKR ${route.basePrice}` : "No buses scheduled"}</span>
                     </div>
                     <Link
-                      href={hasScheduledBus ? `/search?from=${route.origin.toLowerCase()}&to=${route.destination.toLowerCase()}` : "#"}
+                      href={hasScheduledBus ? `/search?${bookingParams.toString()}` : "#"}
                       aria-disabled={!hasScheduledBus}
                       onClick={(event) => {
                         if (!hasScheduledBus) event.preventDefault()
