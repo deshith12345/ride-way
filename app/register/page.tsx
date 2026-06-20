@@ -1,28 +1,60 @@
 
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { Suspense, useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { signOut } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import Link from "next/link"
-import { cn } from "@/lib/utils"
-import { ShieldCheck, User, Loader2 } from "lucide-react"
+import { ShieldCheck, Loader2 } from "lucide-react"
 import BrandLogo from "@/components/shared/BrandLogo"
+import { normalizeRole, type AppRole } from "@/lib/authz"
 
-const travellerConfig = {
-  label: "Traveller",
-  icon: <User className="h-6 w-6" />,
-  bg: "/traveller-bg.jpg",
-  title: "Join RideWay",
-  desc: "Book tickets, track buses and travel with ease."
+const roleConfigs: Record<AppRole, {
+  label: string
+  bg: string
+  title: string
+  desc: string
+  formDescription: string
+}> = {
+  ADMIN: {
+    label: "Admin",
+    bg: "/admin-bg.jpg",
+    title: "Create Admin Access",
+    desc: "Manage routes, buses, schedules, users, and support from RideWay.",
+    formDescription: "Create an admin account for the RideWay management portal.",
+  },
+  DRIVER: {
+    label: "Driver",
+    bg: "/driver-bg.jpg",
+    title: "Create Driver Access",
+    desc: "View assigned trips, scan tickets, and manage your driving schedule.",
+    formDescription: "Create a driver account for assigned trips and ticket scanning.",
+  },
+  TRAVELLER: {
+    label: "Traveller",
+    bg: "/traveller-bg.jpg",
+    title: "Join RideWay",
+    desc: "Book tickets, track buses and travel with ease.",
+    formDescription: "Create a traveller account and book your next ride.",
+  },
 }
 
-export default function RegisterPage() {
+function safeCallbackUrl(value: string | null, role: AppRole) {
+  if (value?.startsWith("/") && !value.startsWith("//")) return value
+  if (role === "ADMIN") return "/admin/dashboard"
+  if (role === "DRIVER") return "/driver/dashboard"
+  return "/dashboard"
+}
+
+function RegisterContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const role = normalizeRole(searchParams.get("roleRequired")) || "TRAVELLER"
+  const roleConfig = roleConfigs[role]
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -60,7 +92,7 @@ export default function RegisterPage() {
           email: formData.email,
           password: formData.password,
           phone: formData.phone,
-          role: "TRAVELLER",
+          role,
         }),
       })
 
@@ -71,7 +103,12 @@ export default function RegisterPage() {
       }
 
       await signOut({ redirect: false })
-      router.push("/login?registered=true")
+      const loginParams = new URLSearchParams({
+        registered: "true",
+        callbackUrl: safeCallbackUrl(searchParams.get("callbackUrl"), role),
+      })
+      if (role !== "TRAVELLER") loginParams.set("roleRequired", role)
+      router.push(`/login?${loginParams.toString()}`)
     } catch (err: any) {
       setError(err.message || "Something went wrong")
     } finally {
@@ -87,8 +124,8 @@ export default function RegisterPage() {
         <div className="absolute inset-0 transition-opacity duration-1000 ease-in-out">
           <div className="absolute inset-0 bg-black/40 z-10" />
           <img
-            src={travellerConfig.bg}
-            alt={travellerConfig.label}
+            src={roleConfig.bg}
+            alt={roleConfig.label}
             className="w-full h-full object-cover transition-transform duration-[10000ms] ease-linear scale-110"
           />
         </div>
@@ -101,9 +138,9 @@ export default function RegisterPage() {
 
         <div className="relative z-20 max-w-md animate-in fade-in slide-in-from-left-8 duration-700">
 
-          <h2 className="text-5xl font-black mb-4 leading-tight">{travellerConfig.title}</h2>
+          <h2 className="text-5xl font-black mb-4 leading-tight">{roleConfig.title}</h2>
           <p className="text-xl text-white/80 font-medium leading-relaxed">
-            {travellerConfig.desc}
+            {roleConfig.desc}
           </p>
         </div>
 
@@ -128,7 +165,7 @@ export default function RegisterPage() {
 
           <div className="mb-10">
             <h1 className="text-4xl font-black text-slate-900 mb-2">Create your account</h1>
-            <p className="text-slate-500 font-medium">Create a traveller account and book your next ride.</p>
+            <p className="text-slate-500 font-medium">{roleConfig.formDescription}</p>
           </div>
 
           {error && (
@@ -269,5 +306,13 @@ export default function RegisterPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-white"><Loader2 className="h-10 w-10 animate-spin text-blue-600" /></div>}>
+      <RegisterContent />
+    </Suspense>
   )
 }

@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react"
 import Link from "next/link"
 import { getProviders, signIn, signOut, useSession } from "next-auth/react"
-import { useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { ArrowRight, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label"
 import BrandLogo from "@/components/shared/BrandLogo"
 
 function LoginContent() {
+    const router = useRouter()
     const searchParams = useSearchParams()
     const { data: session, status } = useSession()
     const [formData, setFormData] = useState({
@@ -26,6 +27,13 @@ function LoginContent() {
     const registered = searchParams.get("registered")
     const roleRequired = searchParams.get("roleRequired")
     const requiredRole = roleRequired?.toUpperCase()
+    const isStaffLogin = requiredRole === "ADMIN" || requiredRole === "DRIVER"
+    const staffRegisterHref = isStaffLogin
+        ? `/register?${new URLSearchParams({
+            roleRequired: requiredRole,
+            callbackUrl: getRequestedCallbackUrl() || (requiredRole === "ADMIN" ? "/admin/dashboard" : "/driver/dashboard"),
+        }).toString()}`
+        : "/register"
     const currentRole = session?.user?.role?.toUpperCase()
     const shouldSwitchAccount =
         searchParams.get("switchAccount") === "1" &&
@@ -82,7 +90,7 @@ function LoginContent() {
                 return
             }
 
-            window.location.href = result?.url || redirectTo
+            router.push(result?.url || redirectTo)
         } catch {
             setError("Something went wrong. Please try again.")
             setLoading(false)
@@ -217,8 +225,8 @@ function LoginContent() {
 
                     <p className="mt-8 text-center text-sm font-bold text-slate-500">
                         New on RideWay?{" "}
-                        <Link href="/register" className="text-blue-600 transition-colors hover:text-blue-800">
-                            Create Account
+                        <Link href={staffRegisterHref} className="text-blue-600 transition-colors hover:text-blue-800">
+                            Create {isStaffLogin ? `${requiredRole === "ADMIN" ? "Admin" : "Driver"} Account` : "Account"}
                         </Link>
                     </p>
                 </div>

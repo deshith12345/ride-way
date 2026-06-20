@@ -9,7 +9,7 @@ const registerSchema = z.object({
     email: z.string().trim().toLowerCase().email("Invalid email address"),
     password: z.string().min(8, "Password must be at least 8 characters").max(128, "Password is too long"),
     phone: z.string().optional(),
-    role: z.literal("TRAVELLER").default("TRAVELLER"),
+    role: z.enum(["ADMIN", "DRIVER", "TRAVELLER"]).default("TRAVELLER"),
 })
 
 export async function POST(req: NextRequest) {
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
                 email: validatedData.email,
                 password: hashedPassword,
                 phone: validatedData.phone,
-                role: UserRole.TRAVELLER,
+                role: UserRole[validatedData.role],
             },
             select: {
                 id: true,
