@@ -74,8 +74,8 @@ export default function BookingPage() {
         try {
             setError("")
             const [tripRes, seatsRes] = await Promise.all([
-                fetch(`/api/trips/${tripId}`),
-                fetch(`/api/trips/${tripId}/seats`),
+                fetch(`/api/trips/${tripId}`, { cache: "no-store" }),
+                fetch(`/api/trips/${tripId}/seats`, { cache: "no-store" }),
             ])
 
             const tripData = await tripRes.json()

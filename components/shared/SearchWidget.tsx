@@ -46,7 +46,7 @@ export default function SearchWidget() {
     React.useEffect(() => {
         const fetchCities = async () => {
             try {
-                const res = await fetch('/api/locations')
+                const res = await fetch('/api/locations', { cache: 'no-store' })
                 const data = await res.json()
                 if (Array.isArray(data)) setCities(data)
             } catch (err) {

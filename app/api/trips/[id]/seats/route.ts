@@ -2,6 +2,9 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // GET booked seats for a trip
 export async function GET(
     req: Request,
@@ -42,10 +45,17 @@ export async function GET(
             status: t.status,
         }));
 
-        return NextResponse.json({
-            totalSeats: trip.bus?.totalSeats || 45,
-            bookedSeats,
-        });
+        return NextResponse.json(
+            {
+                totalSeats: trip.bus?.totalSeats || 45,
+                bookedSeats,
+            },
+            {
+                headers: {
+                    'Cache-Control': 'no-store, max-age=0',
+                },
+            }
+        );
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }

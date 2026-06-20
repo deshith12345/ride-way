@@ -12,6 +12,9 @@ import { Button } from "@/components/ui/button"
 import BackgroundSlider from "@/components/shared/BackgroundSlider"
 import { prisma } from "@/lib/prisma"
 
+export const dynamic = "force-dynamic"
+export const revalidate = 0
+
 function formatDuration(minutes?: number | null) {
   if (!minutes) return "Time pending"
 

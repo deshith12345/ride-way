@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET(req: Request) {
     try {
         const { searchParams } = new URL(req.url);
@@ -49,7 +52,11 @@ export async function GET(req: Request) {
             orderBy: { departureTime: 'asc' },
         });
 
-        return NextResponse.json(trips);
+        return NextResponse.json(trips, {
+            headers: {
+                'Cache-Control': 'no-store, max-age=0',
+            },
+        });
     } catch (error: any) {
         console.error('Search API Error:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });

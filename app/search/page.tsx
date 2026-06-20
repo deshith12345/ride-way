@@ -25,7 +25,7 @@ function SearchResults() {
     const fetchTrips = async () => {
         setLoading(true)
         try {
-            const res = await fetch(`/api/trips/search?${searchParams.toString()}`)
+            const res = await fetch(`/api/trips/search?${searchParams.toString()}`, { cache: 'no-store' })
             const data = await res.json()
             if (Array.isArray(data)) {
                 setTrips(data)

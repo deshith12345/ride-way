@@ -27,7 +27,7 @@ export default function RoutesPage() {
   useEffect(() => {
     const fetchRoutes = async () => {
       try {
-        const res = await fetch('/api/routes')
+        const res = await fetch('/api/routes', { cache: 'no-store' })
         const data = await res.json()
         if (Array.isArray(data)) {
           setAllRoutes(data)

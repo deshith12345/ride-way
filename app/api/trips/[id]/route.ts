@@ -4,6 +4,9 @@ import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
 import { normalizeRole } from '@/lib/authz';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 const tripStatuses = ['SCHEDULED', 'BOARDING', 'DEPARTED', 'IN_TRANSIT', 'ARRIVED', 'COMPLETED', 'CANCELLED', 'DELAYED'] as const;
 
 function cleanOptionalId(value: unknown) {
@@ -28,7 +31,11 @@ export async function GET(
 
         if (!trip) return NextResponse.json({ error: 'Trip not found' }, { status: 404 });
 
-        return NextResponse.json(trip);
+        return NextResponse.json(trip, {
+            headers: {
+                'Cache-Control': 'no-store, max-age=0',
+            },
+        });
     } catch (error: any) {
         console.error('Fetch Trip API Error:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });

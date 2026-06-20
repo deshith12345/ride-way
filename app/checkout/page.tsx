@@ -76,7 +76,7 @@ function CheckoutContent() {
 
     const fetchTrip = async () => {
       try {
-        const res = await fetch(`/api/trips/${tripId}`)
+      const res = await fetch(`/api/trips/${tripId}`, { cache: "no-store" })
         const data = await res.json()
         if (!res.ok) throw new Error(data.error || "Trip not found")
         setTrip(data)
