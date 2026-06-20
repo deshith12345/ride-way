@@ -1,16 +1,30 @@
-import NextAuth from "next-auth"
+import { getToken } from "next-auth/jwt"
 import { NextResponse } from "next/server"
-import { authConfig } from "./auth.config"
+import type { NextRequest } from "next/server"
 import { getPortalFromHost, portalPathForRole } from "@/lib/portal"
 import { isPortalRole, normalizeRole } from "@/lib/authz"
 
-const { auth } = NextAuth(authConfig)
+type RoleName = "ADMIN" | "DRIVER" | "TRAVELLER"
+type PortalKind = ReturnType<typeof getPortalFromHost>
+
+const defaultSessionCookieNames = [
+    "__Secure-authjs.session-token",
+    "authjs.session-token",
+]
+
+const roleSessionCookieNames: Record<RoleName, string> = {
+    ADMIN: "rideway.admin.session-token",
+    DRIVER: "rideway.driver.session-token",
+    TRAVELLER: "rideway.traveller.session-token",
+}
+
+const roleSessionMaxAge = 60 * 60 * 24 * 30
 
 function matchesRoute(pathname: string, route: string) {
     return pathname === route || pathname.startsWith(`${route}/`)
 }
 
-function requestOrigin(req: any) {
+function requestOrigin(req: NextRequest) {
     const host = req.headers.get("host") || req.nextUrl.host
     const forwardedProto = req.headers.get("x-forwarded-proto")
     const protocol = forwardedProto || "https"
@@ -18,99 +32,247 @@ function requestOrigin(req: any) {
     return `${protocol}://${host}`
 }
 
-function loginUrlFor(req: any, targetPath: string) {
-    const loginUrl = new URL("/login", requestOrigin(req))
-    loginUrl.searchParams.set("callbackUrl", targetPath)
-    loginUrl.searchParams.set("roleRequired", targetPath.startsWith("/admin") ? "ADMIN" : "DRIVER")
-    return loginUrl
-}
-
-function redirectToLoginAndClearSession(req: any, targetPath: string) {
-    const loginUrl = loginUrlFor(req, targetPath)
-    const response = NextResponse.redirect(loginUrl)
-    clearSessionCookies(response, req)
-    return response
-}
-
-function redirectToCurrentPathAndClearSession(req: any) {
-    const url = new URL(`${req.nextUrl.pathname}${req.nextUrl.search}`, requestOrigin(req))
-    const response = NextResponse.redirect(url)
-    clearSessionCookies(response, req)
-    return response
-}
-
-function unauthorizedAndClearSession(req: any) {
-    const response = NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    clearSessionCookies(response, req)
-    return response
-}
-
-function cookieDomainCandidates(req?: any) {
-    const hostname = (req?.headers.get("host") || req?.nextUrl?.host || "").split(":")[0].toLowerCase()
-    if (!hostname || hostname === "localhost" || hostname.endsWith(".localhost")) return []
-
-    const parts = hostname.split(".")
-    const candidates = new Set<string>([hostname])
-
-    if (parts.length > 2) {
-        const parent = parts.slice(1).join(".")
-        candidates.add(parent)
-        candidates.add(`.${parent}`)
+function roleForPath(pathname: string) {
+    if (pathname.startsWith("/admin") || pathname.startsWith("/api/admin")) return "ADMIN"
+    if (pathname.startsWith("/driver") || pathname.startsWith("/api/driver")) return "DRIVER"
+    if (
+        pathname === "/dashboard" ||
+        pathname.startsWith("/dashboard/") ||
+        pathname === "/settings" ||
+        pathname.startsWith("/settings/") ||
+        pathname.startsWith("/api/user") ||
+        pathname.startsWith("/api/checkout")
+    ) {
+        return "TRAVELLER"
     }
-
-    return Array.from(candidates)
+    return null
 }
 
-function clearSessionCookies(response: NextResponse, req?: any) {
-    const authCookieNames = [
-        "authjs.session-token",
-        "__Secure-authjs.session-token",
-        "authjs.callback-url",
-        "__Secure-authjs.callback-url",
-        "next-auth.session-token",
-        "__Secure-next-auth.session-token",
-        "next-auth.callback-url",
-        "__Secure-next-auth.callback-url",
-    ]
+function roleForReferer(req: NextRequest) {
+    const referer = req.headers.get("referer")
+    if (!referer) return null
 
-    const domains = cookieDomainCandidates(req)
-    authCookieNames.forEach((name) => {
-        response.cookies.delete(name)
-        response.cookies.set(name, "", { expires: new Date(0), maxAge: 0, path: "/" })
-        domains.forEach((domain) => {
-            response.cookies.set(name, "", { domain, expires: new Date(0), maxAge: 0, path: "/" })
-        })
-    })
-    return response
+    try {
+        return roleForPath(new URL(referer).pathname)
+    } catch {
+        return null
+    }
 }
 
-function redirectToPath(req: any, pathname: string) {
-    const url = new URL(pathname, requestOrigin(req))
-    return NextResponse.redirect(url)
-}
-
-function redirectToRolePortal(req: any, role?: string | null) {
-    return redirectToPath(req, portalPathForRole(role))
-}
-
-function expectedRoleForRequest(
-    portal: ReturnType<typeof getPortalFromHost>,
-    pathname: string,
-    requestedAuthRole?: string | null
-) {
-    if (requestedAuthRole) return requestedAuthRole
-    if (pathname.startsWith("/admin")) return "ADMIN"
-    if (pathname.startsWith("/driver")) return "DRIVER"
+function roleForPortal(portal: PortalKind) {
     if (portal === "admin") return "ADMIN"
     if (portal === "driver") return "DRIVER"
     return "TRAVELLER"
 }
 
-const proxy = auth((req) => {
+function expectedRoleForRequest(
+    req: NextRequest,
+    portal: PortalKind,
+    requestedAuthRole?: string | null
+) {
+    const { pathname } = req.nextUrl
+    const normalizedRequestedRole = normalizeRole(requestedAuthRole)
+
+    if (normalizedRequestedRole) return normalizedRequestedRole
+    if (pathname.startsWith("/api/auth/session") || pathname.startsWith("/api/auth/signout")) {
+        return roleForReferer(req) || roleForPortal(portal)
+    }
+    if (pathname.startsWith("/api/support") || pathname.startsWith("/api/trips")) {
+        return roleForReferer(req) || roleForPath(pathname) || roleForPortal(portal)
+    }
+    return roleForPath(pathname) || roleForPortal(portal)
+}
+
+function loginUrlFor(req: NextRequest, targetPath: string, role: RoleName) {
+    const loginUrl = new URL("/login", requestOrigin(req))
+    loginUrl.searchParams.set("callbackUrl", targetPath)
+    loginUrl.searchParams.set("roleRequired", role)
+    return loginUrl
+}
+
+function redirectToLogin(req: NextRequest, targetPath: string, role: RoleName) {
+    return NextResponse.redirect(loginUrlFor(req, targetPath, role))
+}
+
+function redirectToPath(req: NextRequest, pathname: string) {
+    const url = new URL(pathname, requestOrigin(req))
+    return NextResponse.redirect(url)
+}
+
+function redirectToRolePortal(req: NextRequest, role?: string | null) {
+    return redirectToPath(req, portalPathForRole(role))
+}
+
+function parseCookieHeader(cookieHeader: string | null) {
+    const cookies = new Map<string, string>()
+    if (!cookieHeader) return cookies
+
+    cookieHeader.split(";").forEach((part) => {
+        const index = part.indexOf("=")
+        if (index === -1) return
+
+        const name = part.slice(0, index).trim()
+        const value = part.slice(index + 1).trim()
+        if (!name) return
+
+        try {
+            cookies.set(name, decodeURIComponent(value))
+        } catch {
+            cookies.set(name, value)
+        }
+    })
+
+    return cookies
+}
+
+function serializeCookieHeader(cookies: Map<string, string>) {
+    return Array.from(cookies.entries())
+        .map(([name, value]) => `${name}=${encodeURIComponent(value)}`)
+        .join("; ")
+}
+
+function removeDefaultSessionCookies(cookies: Map<string, string>) {
+    for (const name of Array.from(cookies.keys())) {
+        if (defaultSessionCookieNames.some((cookieName) => name === cookieName || name.startsWith(`${cookieName}.`))) {
+            cookies.delete(name)
+        }
+    }
+}
+
+function requestHeadersWithSession(req: NextRequest, rawToken?: string | null) {
+    const headers = new Headers(req.headers)
+    const cookies = parseCookieHeader(req.headers.get("cookie"))
+
+    removeDefaultSessionCookies(cookies)
+    if (rawToken) {
+        defaultSessionCookieNames.forEach((name) => cookies.set(name, rawToken))
+    }
+
+    headers.set("cookie", serializeCookieHeader(cookies))
+    return headers
+}
+
+async function readJwt(req: NextRequest, cookieName: string, salt: string) {
+    const secret = process.env.NEXTAUTH_SECRET
+    if (!secret) return null
+
+    try {
+        return await getToken({
+            req,
+            secret,
+            cookieName,
+            salt,
+        })
+    } catch {
+        return null
+    }
+}
+
+async function readRawToken(req: NextRequest, cookieName: string, salt: string) {
+    const secret = process.env.NEXTAUTH_SECRET
+    if (!secret) return null
+
+    try {
+        return await getToken({
+            req,
+            secret,
+            cookieName,
+            salt,
+            raw: true,
+        })
+    } catch {
+        return null
+    }
+}
+
+async function readDefaultSession(req: NextRequest) {
+    for (const cookieName of defaultSessionCookieNames) {
+        const token = await readJwt(req, cookieName, cookieName)
+        if (!token) continue
+
+        const role = normalizeRole(token.role)
+        const rawToken = await readRawToken(req, cookieName, cookieName)
+        if (role && rawToken) return { role, rawToken }
+    }
+
+    return null
+}
+
+async function readRoleSession(req: NextRequest, role: RoleName) {
+    const cookieName = roleSessionCookieNames[role]
+
+    for (const salt of defaultSessionCookieNames) {
+        const token = await readJwt(req, cookieName, salt)
+        if (!token || normalizeRole(token.role) !== role) continue
+
+        const rawToken = await readRawToken(req, cookieName, salt)
+        if (rawToken) return { role, rawToken }
+    }
+
+    return null
+}
+
+async function selectSessionForRole(req: NextRequest, expectedRole: RoleName) {
+    const roleSession = await readRoleSession(req, expectedRole)
+    if (roleSession) {
+        return {
+            ...roleSession,
+            shouldPersistRoleCookie: false,
+        }
+    }
+
+    const defaultSession = await readDefaultSession(req)
+    if (defaultSession?.role === expectedRole) {
+        return {
+            ...defaultSession,
+            shouldPersistRoleCookie: true,
+        }
+    }
+
+    return null
+}
+
+function setRoleSessionCookie(response: NextResponse, role: RoleName, rawToken: string) {
+    response.cookies.set(roleSessionCookieNames[role], rawToken, {
+        httpOnly: true,
+        maxAge: roleSessionMaxAge,
+        path: "/",
+        sameSite: "lax",
+        secure: true,
+    })
+}
+
+function deleteRoleSessionCookie(response: NextResponse, role: RoleName) {
+    response.cookies.set(roleSessionCookieNames[role], "", {
+        expires: new Date(0),
+        maxAge: 0,
+        path: "/",
+        sameSite: "lax",
+        secure: true,
+    })
+}
+
+function nextWithSelectedSession(
+    req: NextRequest,
+    selectedSession: Awaited<ReturnType<typeof selectSessionForRole>>,
+    expectedRole: RoleName
+) {
+    const response = NextResponse.next({
+        request: {
+            headers: requestHeadersWithSession(req, selectedSession?.rawToken),
+        },
+    })
+
+    if (selectedSession?.shouldPersistRoleCookie) {
+        setRoleSessionCookie(response, expectedRole, selectedSession.rawToken)
+    }
+
+    return response
+}
+
+export default async function proxy(req: NextRequest) {
     const { pathname } = req.nextUrl
     const portal = getPortalFromHost(req.headers.get("host"))
-    const isLoggedIn = !!req.auth
-    const userRole = normalizeRole(req.auth?.user?.role)
 
     const publicRoutes = [
         "/",
@@ -133,7 +295,7 @@ const proxy = auth((req) => {
         "/terms",
         "/track",
     ]
-    const isPublicRoute = publicRoutes.some(route => matchesRoute(pathname, route))
+    const isPublicRoute = publicRoutes.some((route) => matchesRoute(pathname, route))
 
     const authRoutes = ["/login", "/register"]
     const isAuthRoute = authRoutes.includes(pathname)
@@ -144,23 +306,26 @@ const proxy = auth((req) => {
         ? "ADMIN"
         : callbackUrl.startsWith("/driver")
             ? "DRIVER"
-            : null
-    const expectedRequestRole = expectedRoleForRequest(portal, pathname, callbackRole || requestedRole)
-    const isRoleScopedPath = pathname.startsWith("/admin") || pathname.startsWith("/driver")
+            : callbackUrl.startsWith("/dashboard")
+                ? "TRAVELLER"
+                : null
+    const expectedRole = expectedRoleForRequest(req, portal, callbackRole || requestedRole)
+    const selectedSession = await selectSessionForRole(req, expectedRole)
+    const isLoggedIn = Boolean(selectedSession)
+    const userRole = selectedSession?.role || null
 
-    if (isLoggedIn && (!userRole || userRole !== expectedRequestRole) && !isAuthApiRoute && pathname !== "/auth/error") {
-        if (pathname.startsWith("/api")) {
-            return unauthorizedAndClearSession(req)
-        }
+    if (pathname.startsWith("/api/auth/signout")) {
+        const response = nextWithSelectedSession(req, selectedSession, expectedRole)
+        deleteRoleSessionCookie(response, expectedRole)
+        return response
+    }
 
-        if (isAuthRoute || (portal === "public" && !isRoleScopedPath)) {
-            return redirectToCurrentPathAndClearSession(req)
-        }
+    if (pathname.startsWith("/api/auth/session")) {
+        return nextWithSelectedSession(req, selectedSession, expectedRole)
+    }
 
-        return redirectToLoginAndClearSession(
-            req,
-            portal === "admin" ? "/admin/dashboard" : "/driver/dashboard"
-        )
+    if (isAuthApiRoute) {
+        return NextResponse.next()
     }
 
     if (portal === "admin" && pathname === "/") {
@@ -179,30 +344,13 @@ const proxy = auth((req) => {
         return redirectToPath(req, "/driver/dashboard")
     }
 
-    if (isAuthRoute && isLoggedIn) {
-        if (callbackRole && userRole !== callbackRole) {
-            return clearSessionCookies(NextResponse.next(), req)
-        }
-
-        if (!userRole) {
-            return clearSessionCookies(NextResponse.next(), req)
-        }
-
-        return redirectToRolePortal(req, userRole)
+    if (isAuthRoute) {
+        if (isLoggedIn) return redirectToRolePortal(req, userRole)
+        return nextWithSelectedSession(req, selectedSession, expectedRole)
     }
 
-    if (isLoggedIn) {
-        if (pathname.startsWith("/admin") && userRole && userRole !== "ADMIN") {
-            return redirectToLoginAndClearSession(req, `${pathname}${req.nextUrl.search}`)
-        }
-
-        if (pathname.startsWith("/driver") && userRole && userRole !== "DRIVER") {
-            return redirectToLoginAndClearSession(req, `${pathname}${req.nextUrl.search}`)
-        }
-
-        if (pathname === "/dashboard" && isPortalRole(userRole)) {
-            return redirectToRolePortal(req, userRole)
-        }
+    if (isLoggedIn && pathname === "/dashboard" && isPortalRole(userRole)) {
+        return nextWithSelectedSession(req, selectedSession, expectedRole)
     }
 
     if (!isPublicRoute && !isLoggedIn) {
@@ -210,17 +358,11 @@ const proxy = auth((req) => {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
         }
 
-        const loginUrl = new URL("/login", requestOrigin(req))
-        loginUrl.searchParams.set("callbackUrl", `${pathname}${req.nextUrl.search}`)
-        if (pathname.startsWith("/admin")) loginUrl.searchParams.set("roleRequired", "ADMIN")
-        if (pathname.startsWith("/driver")) loginUrl.searchParams.set("roleRequired", "DRIVER")
-        return NextResponse.redirect(loginUrl)
+        return redirectToLogin(req, `${pathname}${req.nextUrl.search}`, expectedRole)
     }
 
-    return NextResponse.next()
-})
-
-export default proxy
+    return nextWithSelectedSession(req, selectedSession, expectedRole)
+}
 
 export const config = {
     matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|gif|webp|svg|ico)$).*)"],
