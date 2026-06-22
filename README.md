@@ -40,9 +40,9 @@ Password recovery uses one-time reset links that expire after 30 minutes. The ap
 In Vercel, set:
 
 ```text
-GMAIL_USER="support.rideway@gmail.com"
+GMAIL_USER="supportrideway@gmail.com"
 GMAIL_APP_PASSWORD="your-16-character-gmail-app-password"
-PASSWORD_RESET_FROM_EMAIL="RideWay <support.rideway@gmail.com>"
+PASSWORD_RESET_FROM_EMAIL="RideWay <supportrideway@gmail.com>"
 ```
 
 Use a Gmail App Password, not the normal Gmail account password. The Gmail account must have 2-Step Verification enabled before Google allows App Password creation.
