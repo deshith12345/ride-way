@@ -123,7 +123,12 @@ function ForgotPasswordContent() {
                   </div>
                   {error && (
                     <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-600">
-                      {error}
+                      <p>{error}</p>
+                      {error.toLowerCase().includes("temporarily unavailable") && (
+                        <Link href="/help" className="mt-3 inline-flex text-blue-700 underline">
+                          Contact support
+                        </Link>
+                      )}
                     </div>
                   )}
                   <Button type="submit" disabled={loading} className="h-12 w-full rounded-xl bg-blue-600 font-bold text-white hover:bg-blue-700">

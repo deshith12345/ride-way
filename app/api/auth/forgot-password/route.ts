@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
 
         if (process.env.NODE_ENV === "production" && !isPasswordResetEmailConfigured()) {
             return NextResponse.json(
-                { error: "Password recovery email is not configured. Add RESEND_API_KEY and PASSWORD_RESET_FROM_EMAIL in Vercel." },
+                { error: "Password recovery is temporarily unavailable. Please contact RideWay support for help accessing your account." },
                 { status: 503 }
             )
         }
