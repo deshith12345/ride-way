@@ -1,4 +1,5 @@
 import { createHash, randomBytes } from "crypto"
+import nodemailer from "nodemailer"
 
 export const passwordResetTokenMinutes = 30
 
@@ -23,7 +24,22 @@ export function passwordResetExpiry() {
 }
 
 export function isPasswordResetEmailConfigured() {
-    return Boolean(process.env.RESEND_API_KEY && (process.env.PASSWORD_RESET_FROM_EMAIL || process.env.RESEND_FROM_EMAIL))
+    return Boolean(process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD)
+}
+
+function passwordResetMessage({ name, resetUrl }: { name?: string | null; resetUrl: string }) {
+    const text = `Reset your RideWay password: ${resetUrl}\n\nThis link expires in ${passwordResetTokenMinutes} minutes. If you did not request this reset, ignore this email.`
+    const html = `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #0f172a;">
+            <h2>Reset your RideWay password</h2>
+            <p>Hello ${name || "there"},</p>
+            <p>Use the secure link below to reset your RideWay password. This link expires in ${passwordResetTokenMinutes} minutes.</p>
+            <p><a href="${resetUrl}" style="display:inline-block;padding:12px 18px;background:#2563eb;color:#ffffff;text-decoration:none;border-radius:10px;font-weight:700;">Reset Password</a></p>
+            <p>If you did not request this reset, you can safely ignore this email.</p>
+        </div>
+    `
+
+    return { html, text }
 }
 
 export async function sendPasswordResetEmail({
@@ -35,38 +51,30 @@ export async function sendPasswordResetEmail({
     name?: string | null
     resetUrl: string
 }) {
-    const apiKey = process.env.RESEND_API_KEY
-    const from = process.env.PASSWORD_RESET_FROM_EMAIL || process.env.RESEND_FROM_EMAIL
+    const gmailUser = process.env.GMAIL_USER
+    const gmailAppPassword = process.env.GMAIL_APP_PASSWORD
+    const gmailFrom = process.env.PASSWORD_RESET_FROM_EMAIL || (gmailUser ? `RideWay <${gmailUser}>` : undefined)
+    const message = passwordResetMessage({ name, resetUrl })
 
-    if (!apiKey || !from) return false
+    if (gmailUser && gmailAppPassword && gmailFrom) {
+        const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+                user: gmailUser,
+                pass: gmailAppPassword,
+            },
+        })
 
-    const response = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-            Authorization: `Bearer ${apiKey}`,
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            from,
+        await transporter.sendMail({
+            from: gmailFrom,
             to,
             subject: "Reset your RideWay password",
-            html: `
-                <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #0f172a;">
-                    <h2>Reset your RideWay password</h2>
-                    <p>Hello ${name || "there"},</p>
-                    <p>Use the secure link below to reset your RideWay password. This link expires in ${passwordResetTokenMinutes} minutes.</p>
-                    <p><a href="${resetUrl}" style="display:inline-block;padding:12px 18px;background:#2563eb;color:#ffffff;text-decoration:none;border-radius:10px;font-weight:700;">Reset Password</a></p>
-                    <p>If you did not request this reset, you can safely ignore this email.</p>
-                </div>
-            `,
-            text: `Reset your RideWay password: ${resetUrl}\n\nThis link expires in ${passwordResetTokenMinutes} minutes. If you did not request this reset, ignore this email.`,
-        }),
-    })
+            html: message.html,
+            text: message.text,
+        })
 
-    if (!response.ok) {
-        const body = await response.text().catch(() => "")
-        throw new Error(`Password reset email failed: ${response.status} ${body}`)
+        return true
     }
 
-    return true
+    return false
 }

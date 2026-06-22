@@ -35,14 +35,17 @@ After those values are set, the Google button on `/login` becomes active.
 
 ## Password Reset Email
 
-Password recovery uses one-time reset links that expire after 30 minutes. In Vercel, set these environment variables so users can receive reset emails:
+Password recovery uses one-time reset links that expire after 30 minutes. The app can send reset emails through Gmail SMTP using a Gmail App Password.
+
+In Vercel, set:
 
 ```text
-RESEND_API_KEY="your-resend-api-key"
-PASSWORD_RESET_FROM_EMAIL="RideWay <support@your-domain.com>"
+GMAIL_USER="support.rideway@gmail.com"
+GMAIL_APP_PASSWORD="your-16-character-gmail-app-password"
+PASSWORD_RESET_FROM_EMAIL="RideWay <support.rideway@gmail.com>"
 ```
 
-Use a verified sender domain in Resend for production delivery.
+Use a Gmail App Password, not the normal Gmail account password. The Gmail account must have 2-Step Verification enabled before Google allows App Password creation.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
