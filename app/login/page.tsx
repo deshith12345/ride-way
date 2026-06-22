@@ -137,7 +137,13 @@ function LoginContent() {
         setGoogleLoading(true)
 
         try {
-            const redirectTo = getRequestedCallbackUrl() || "/dashboard"
+            const redirectTo =
+            getRequestedCallbackUrl() ||
+            (requiredRole === "ADMIN"
+                ? "/admin/dashboard"
+                : requiredRole === "DRIVER"
+                ? "/driver/dashboard"
+                : "/dashboard")
             const googleIntent = getGoogleIntent(redirectTo)
             const response = await fetch("/api/auth/google-intent", {
                 method: "POST",
