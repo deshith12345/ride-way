@@ -12,6 +12,7 @@ export async function POST(req: NextRequest) {
     const intent = resolveGoogleOAuthIntent({
       roleRequired: body.roleRequired,
       callbackUrl: body.callbackUrl,
+      strictRole: body.strictRole,
     })
 
     if (!intent) {

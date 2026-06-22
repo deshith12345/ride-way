@@ -6,6 +6,7 @@ export const googleOAuthIntentMaxAge = 10 * 60
 export type GoogleOAuthIntent = {
   role: AppRole
   callbackUrl: string
+  strictRole: boolean
 }
 
 export function safeOAuthCallbackUrl(value: unknown) {
@@ -24,17 +25,19 @@ export function roleFromCallbackUrl(callbackUrl: string) {
 export function resolveGoogleOAuthIntent(input: {
   roleRequired?: unknown
   callbackUrl?: unknown
+  strictRole?: unknown
 }) {
   const callbackUrl = safeOAuthCallbackUrl(input.callbackUrl)
   const requestedRole = normalizeRole(input.roleRequired)
   const callbackRole = roleFromCallbackUrl(callbackUrl)
   const role = requestedRole || callbackRole || "TRAVELLER"
+  const strictRole = input.strictRole === true
 
   if (requestedRole && callbackRole && requestedRole !== callbackRole) {
     return null
   }
 
-  return { role, callbackUrl } satisfies GoogleOAuthIntent
+  return { role, callbackUrl, strictRole } satisfies GoogleOAuthIntent
 }
 
 export function serializeGoogleOAuthIntent(intent: GoogleOAuthIntent) {
@@ -48,9 +51,10 @@ export function parseGoogleOAuthIntent(value?: string | null): GoogleOAuthIntent
     const parsed = JSON.parse(value) as Partial<GoogleOAuthIntent>
     const role = normalizeRole(parsed.role)
     const callbackUrl = safeOAuthCallbackUrl(parsed.callbackUrl)
+    const strictRole = parsed.strictRole === true
 
     if (!role) return null
-    return { role, callbackUrl }
+    return { role, callbackUrl, strictRole }
   } catch {
     return null
   }

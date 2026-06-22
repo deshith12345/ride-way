@@ -111,7 +111,7 @@ function googleOAuthIntentFromCallbackUrl(value?: string | null): GoogleOAuthInt
   const callbackUrl = safeOAuthCallbackUrl(pathFromCallbackValue(decodedValue))
   const role = roleFromCallbackUrl(callbackUrl)
 
-  return role ? { role, callbackUrl } : null
+  return role ? { role, callbackUrl, strictRole: role !== "TRAVELLER" } : null
 }
 
 function decodeCookieValue(value: string) {
@@ -136,7 +136,7 @@ function loginErrorPath(error: string, intent: GoogleOAuthIntent | null) {
 
   if (intent) {
     params.set("callbackUrl", intent.callbackUrl)
-    if (intent.role !== "TRAVELLER") {
+    if (intent.strictRole && intent.role !== "TRAVELLER") {
       params.set("roleRequired", intent.role)
     }
   }
@@ -266,7 +266,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               return loginErrorPath("GoogleRoleMissing", intent)
             }
 
-            if (intent?.role && existingRole !== intent.role) {
+            if (intent?.strictRole && existingRole !== intent.role) {
               return loginErrorPath("GoogleRoleMismatch", intent)
             }
 

@@ -95,6 +95,7 @@ function RegisterContent() {
         body: JSON.stringify({
           roleRequired: role,
           callbackUrl,
+          strictRole: true,
         }),
       })
 

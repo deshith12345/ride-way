@@ -54,13 +54,13 @@ function LoginContent() {
         return callbackUrl
     }
 
-    function getGoogleRole(redirectTo: string) {
+    function getGoogleIntent(redirectTo: string) {
         if (requiredRole === "ADMIN" || requiredRole === "DRIVER" || requiredRole === "TRAVELLER") {
-            return requiredRole
+            return { role: requiredRole, strictRole: true }
         }
-        if (redirectTo.startsWith("/admin")) return "ADMIN"
-        if (redirectTo.startsWith("/driver")) return "DRIVER"
-        return "TRAVELLER"
+        if (redirectTo.startsWith("/admin")) return { role: "ADMIN", strictRole: true }
+        if (redirectTo.startsWith("/driver")) return { role: "DRIVER", strictRole: true }
+        return { role: "TRAVELLER", strictRole: false }
     }
 
     function authErrorMessage() {
@@ -138,12 +138,14 @@ function LoginContent() {
 
         try {
             const redirectTo = getRequestedCallbackUrl() || "/dashboard"
+            const googleIntent = getGoogleIntent(redirectTo)
             const response = await fetch("/api/auth/google-intent", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    roleRequired: getGoogleRole(redirectTo),
+                    roleRequired: googleIntent.role,
                     callbackUrl: redirectTo,
+                    strictRole: googleIntent.strictRole,
                 }),
             })
 
