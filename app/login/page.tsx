@@ -59,8 +59,19 @@ function LoginContent() {
         const authError = searchParams.get("error")
         if (!authError) return ""
 
+        if (authError === "StaffAccount") {
+            return "This is a staff account. Please sign in through your Admin or Driver portal."
+        }
+        if (authError === "WrongPortal") {
+            const rr = searchParams.get("roleRequired")
+            return `No ${rr ?? "staff"} account found for this Google account. Please use the correct portal.`
+        }
+        if (authError === "NoAccount") {
+            const rr = searchParams.get("roleRequired")
+            return `No ${rr ?? "staff"} account exists for this Google account. Please register first.`
+        }
         if (authError === "EmailNotVerified" || authError === "EmailMissing") {
-            return "Google sign-in could not verify the account email. Please try another sign-in method."
+            return "Google could not verify this email address. Please try a different sign-in method."
         }
         if (authError === "SignInFailed") {
             return "Sign-in failed due to a server error. Please try again."
@@ -122,13 +133,21 @@ function LoginContent() {
         setError("")
         setGoogleLoading(true)
         try {
+            const portalRole =
+                requiredRole === "ADMIN" ? "ADMIN" :
+                requiredRole === "DRIVER" ? "DRIVER" : "TRAVELLER"
             const redirectTo =
                 getRequestedCallbackUrl() ||
-                (requiredRole === "ADMIN"
-                    ? "/admin/dashboard"
-                    : requiredRole === "DRIVER"
-                    ? "/driver/dashboard"
-                    : "/dashboard")
+                (portalRole === "ADMIN" ? "/admin/dashboard" :
+                 portalRole === "DRIVER" ? "/driver/dashboard" : "/dashboard")
+
+            // Tell auth.ts which portal this sign-in is for
+            await fetch("/api/auth/set-login-role", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ role: portalRole }),
+            })
+
             await signIn("google", { redirectTo }, { prompt: "select_account" })
         } catch (err: any) {
             setError(err.message || "Unable to start Google sign-in. Please try again.")

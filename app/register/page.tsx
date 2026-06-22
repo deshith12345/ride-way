@@ -88,6 +88,12 @@ function RegisterContent() {
     setError("")
     setGoogleLoading(true)
     try {
+      // Tell auth.ts which portal this sign-up is for
+      await fetch("/api/auth/set-login-role", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role }),
+      })
       await signIn("google", { redirectTo: callbackUrl }, { prompt: "select_account" })
     } catch (err: any) {
       setError(err.message || "Unable to start Google sign-up. Please try again.")
