@@ -9,9 +9,15 @@ export type GoogleOAuthIntent = {
   strictRole: boolean
 }
 
-export function safeOAuthCallbackUrl(value: unknown) {
-  if (typeof value !== "string") return "/dashboard"
-  if (!value.startsWith("/") || value.startsWith("//")) return "/dashboard"
+function callbackUrlForRole(role?: AppRole | null) {
+  if (role === "ADMIN") return "/admin/dashboard"
+  if (role === "DRIVER") return "/driver/dashboard"
+  return "/dashboard"
+}
+
+export function safeOAuthCallbackUrl(value: unknown, fallbackRole?: AppRole | null) {
+  if (typeof value !== "string") return callbackUrlForRole(fallbackRole)
+  if (!value.startsWith("/") || value.startsWith("//")) return callbackUrlForRole(fallbackRole)
   return value
 }
 
@@ -27,11 +33,15 @@ export function resolveGoogleOAuthIntent(input: {
   callbackUrl?: unknown
   strictRole?: unknown
 }) {
-  const callbackUrl = safeOAuthCallbackUrl(input.callbackUrl)
   const requestedRole = normalizeRole(input.roleRequired)
+  const callbackUrl = safeOAuthCallbackUrl(input.callbackUrl, requestedRole)
   const callbackRole = roleFromCallbackUrl(callbackUrl)
   const role = requestedRole || callbackRole || "TRAVELLER"
-  const strictRole = input.strictRole === true
+  const strictRole =
+    input.strictRole === true ||
+    Boolean(requestedRole) ||
+    role === "ADMIN" ||
+    role === "DRIVER"
 
   if (requestedRole && callbackRole && requestedRole !== callbackRole) {
     return null
@@ -50,7 +60,7 @@ export function parseGoogleOAuthIntent(value?: string | null): GoogleOAuthIntent
   try {
     const parsed = JSON.parse(value) as Partial<GoogleOAuthIntent>
     const role = normalizeRole(parsed.role)
-    const callbackUrl = safeOAuthCallbackUrl(parsed.callbackUrl)
+    const callbackUrl = safeOAuthCallbackUrl(parsed.callbackUrl, role)
     const strictRole = parsed.strictRole === true
 
     if (!role) return null

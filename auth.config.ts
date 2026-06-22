@@ -32,7 +32,7 @@ export const authConfig = {
         error: "/login",
     },
     session: { strategy: "jwt" },
-    secret: process.env.NEXTAUTH_SECRET,
+    secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
     trustHost: true,
     callbacks: {
         authorized({ auth, request: { nextUrl } }) {

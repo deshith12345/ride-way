@@ -26,10 +26,17 @@ function matchesRoute(pathname: string, route: string) {
 
 function requestOrigin(req: NextRequest) {
     const host = req.headers.get("host") || req.nextUrl.host
-    const forwardedProto = req.headers.get("x-forwarded-proto")
-    const protocol = forwardedProto || "https"
+    const forwardedProto = req.headers.get("x-forwarded-proto")?.split(",")[0]?.trim()
+    const protocol = forwardedProto || req.nextUrl.protocol.replace(":", "") || "http"
 
     return `${protocol}://${host}`
+}
+
+function shouldUseSecureCookies(req: NextRequest) {
+    const forwardedProto = req.headers.get("x-forwarded-proto")?.split(",")[0]?.trim()
+    const protocol = forwardedProto || req.nextUrl.protocol.replace(":", "")
+
+    return protocol === "https"
 }
 
 function roleForPath(pathname: string) {
@@ -153,7 +160,7 @@ function requestHeadersWithSession(req: NextRequest, rawToken?: string | null) {
 }
 
 async function readJwt(req: NextRequest, cookieName: string, salt: string) {
-    const secret = process.env.NEXTAUTH_SECRET
+    const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET
     if (!secret) return null
 
     try {
@@ -169,7 +176,7 @@ async function readJwt(req: NextRequest, cookieName: string, salt: string) {
 }
 
 async function readRawToken(req: NextRequest, cookieName: string, salt: string) {
-    const secret = process.env.NEXTAUTH_SECRET
+    const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET
     if (!secret) return null
 
     try {
@@ -232,23 +239,23 @@ async function selectSessionForRole(req: NextRequest, expectedRole: RoleName) {
     return null
 }
 
-function setRoleSessionCookie(response: NextResponse, role: RoleName, rawToken: string) {
+function setRoleSessionCookie(response: NextResponse, role: RoleName, rawToken: string, secure: boolean) {
     response.cookies.set(roleSessionCookieNames[role], rawToken, {
         httpOnly: true,
         maxAge: roleSessionMaxAge,
         path: "/",
         sameSite: "lax",
-        secure: true,
+        secure,
     })
 }
 
-function deleteRoleSessionCookie(response: NextResponse, role: RoleName) {
+function deleteRoleSessionCookie(response: NextResponse, role: RoleName, secure: boolean) {
     response.cookies.set(roleSessionCookieNames[role], "", {
         expires: new Date(0),
         maxAge: 0,
         path: "/",
         sameSite: "lax",
-        secure: true,
+        secure,
     })
 }
 
@@ -264,7 +271,7 @@ function nextWithSelectedSession(
     })
 
     if (selectedSession?.shouldPersistRoleCookie) {
-        setRoleSessionCookie(response, expectedRole, selectedSession.rawToken)
+        setRoleSessionCookie(response, expectedRole, selectedSession.rawToken, shouldUseSecureCookies(req))
     }
 
     return response
@@ -318,7 +325,7 @@ export default async function proxy(req: NextRequest) {
 
     if (pathname.startsWith("/api/auth/signout")) {
         const response = nextWithSelectedSession(req, selectedSession, expectedRole)
-        deleteRoleSessionCookie(response, expectedRole)
+        deleteRoleSessionCookie(response, expectedRole, shouldUseSecureCookies(req))
         return response
     }
 
