@@ -55,7 +55,9 @@ function LoginContent() {
     }
 
     function getGoogleIntent(redirectTo: string) {
-        if (requiredRole === "ADMIN" || requiredRole === "DRIVER" || requiredRole === "TRAVELLER") {
+        // Only ADMIN and DRIVER are restricted portals that require strict role enforcement.
+        // TRAVELLER is the default role — any authenticated user can access /dashboard.
+        if (requiredRole === "ADMIN" || requiredRole === "DRIVER") {
             return { role: requiredRole, strictRole: true }
         }
         if (redirectTo.startsWith("/admin")) return { role: "ADMIN", strictRole: true }
@@ -74,12 +76,12 @@ function LoginContent() {
             authError === "AccessDenied" ||
             authError === "OAuthAccountNotLinked"
         ) {
-            return "Sign-in could not be completed. Check that you are using the correct RideWay portal and try again."
+            return `Sign-in could not be completed (${authError}). Check that you are using the correct RideWay portal and try again.`
         }
         if (authError === "GoogleEmailUnverified" || authError === "GoogleEmailMissing") {
-            return "Google sign-in could not verify the account details. Try another sign-in method."
+            return `Google sign-in could not verify the account details (${authError}). Try another sign-in method.`
         }
-        return ""
+        return `Authentication Error: ${authError}`
     }
 
     useEffect(() => {
