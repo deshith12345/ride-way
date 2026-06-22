@@ -159,6 +159,8 @@ function requestHeadersWithSession(req: NextRequest, rawToken?: string | null) {
     }
 
     headers.set("cookie", serializeCookieHeader(cookies))
+    // Expose pathname so Server Component layouts can detect the current page
+    headers.set("x-pathname", req.nextUrl.pathname)
     return headers
 }
 
