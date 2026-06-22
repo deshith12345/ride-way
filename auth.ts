@@ -266,7 +266,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               return loginErrorPath("GoogleRoleMissing", intent)
             }
 
-            if (intent?.strictRole && existingRole !== intent.role) {
+            // Only enforce strict role for ADMIN and DRIVER portals.
+            // Never block sign-in for TRAVELLER or regular login —
+            // any user can sign in regardless of their role.
+            const intentRole = intent?.role
+            const isPortalStrict =
+              intent?.strictRole &&
+              (intentRole === "ADMIN" || intentRole === "DRIVER") &&
+              existingRole !== intentRole
+
+            if (isPortalStrict) {
               return loginErrorPath("GoogleRoleMismatch", intent)
             }
 
