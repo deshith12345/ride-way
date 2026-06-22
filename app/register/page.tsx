@@ -87,30 +87,10 @@ function RegisterContent() {
   const handleGoogleSignup = async () => {
     setError("")
     setGoogleLoading(true)
-
     try {
-      const response = await fetch("/api/auth/google-intent", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          roleRequired: role,
-          callbackUrl,
-          strictRole: true,
-        }),
-      })
-
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}))
-        throw new Error(data.error || "Unable to start Google signup.")
-      }
-
-      await signIn(
-        "google",
-        { redirectTo: callbackUrl },
-        { prompt: "select_account" }
-      )
+      await signIn("google", { redirectTo: callbackUrl }, { prompt: "select_account" })
     } catch (err: any) {
-      setError(err.message || "Unable to start Google signup.")
+      setError(err.message || "Unable to start Google sign-up. Please try again.")
       setGoogleLoading(false)
     }
   }

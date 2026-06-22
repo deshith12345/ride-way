@@ -363,10 +363,20 @@ export default async function proxy(req: NextRequest) {
     }
 
     if (!isPublicRoute && !isLoggedIn) {
+        // Check if user is authenticated with a different role (e.g. ADMIN on /dashboard)
+        // Redirect them to their own portal instead of looping back to login
+        const anySession = await readDefaultSession(req)
+        if (anySession?.role) {
+            if (pathname.startsWith("/api")) {
+                return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+            }
+            return redirectToRolePortal(req, anySession.role)
+        }
+
+        // Truly unauthenticated — send to login
         if (pathname.startsWith("/api")) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
         }
-
         return redirectToLogin(req, `${pathname}${req.nextUrl.search}`, expectedRole)
     }
 

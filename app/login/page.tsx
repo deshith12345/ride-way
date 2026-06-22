@@ -54,34 +54,18 @@ function LoginContent() {
         return callbackUrl
     }
 
-    function getGoogleIntent(redirectTo: string) {
-        // Only ADMIN and DRIVER are restricted portals that require strict role enforcement.
-        // TRAVELLER is the default role — any authenticated user can access /dashboard.
-        if (requiredRole === "ADMIN" || requiredRole === "DRIVER") {
-            return { role: requiredRole, strictRole: true }
-        }
-        if (redirectTo.startsWith("/admin")) return { role: "ADMIN", strictRole: true }
-        if (redirectTo.startsWith("/driver")) return { role: "DRIVER", strictRole: true }
-        return { role: "TRAVELLER", strictRole: false }
-    }
 
     function authErrorMessage() {
         const authError = searchParams.get("error")
         if (!authError) return ""
 
-        if (
-            authError === "GoogleRoleMismatch" ||
-            authError === "GoogleRoleMissing" ||
-            authError === "GoogleSignInFailed" ||
-            authError === "AccessDenied" ||
-            authError === "OAuthAccountNotLinked"
-        ) {
-            return `Sign-in could not be completed (${authError}). Check that you are using the correct RideWay portal and try again.`
+        if (authError === "EmailNotVerified" || authError === "EmailMissing") {
+            return "Google sign-in could not verify the account email. Please try another sign-in method."
         }
-        if (authError === "GoogleEmailUnverified" || authError === "GoogleEmailMissing") {
-            return `Google sign-in could not verify the account details (${authError}). Try another sign-in method.`
+        if (authError === "SignInFailed") {
+            return "Sign-in failed due to a server error. Please try again."
         }
-        return `Authentication Error: ${authError}`
+        return `Sign-in error: ${authError}`
     }
 
     useEffect(() => {
@@ -137,38 +121,17 @@ function LoginContent() {
     const handleGoogleSignIn = async () => {
         setError("")
         setGoogleLoading(true)
-
         try {
             const redirectTo =
-            getRequestedCallbackUrl() ||
-            (requiredRole === "ADMIN"
-                ? "/admin/dashboard"
-                : requiredRole === "DRIVER"
-                ? "/driver/dashboard"
-                : "/dashboard")
-            const googleIntent = getGoogleIntent(redirectTo)
-            const response = await fetch("/api/auth/google-intent", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    roleRequired: googleIntent.role,
-                    callbackUrl: redirectTo,
-                    strictRole: googleIntent.strictRole,
-                }),
-            })
-
-            if (!response.ok) {
-                const data = await response.json().catch(() => ({}))
-                throw new Error(data.error || "Unable to start Google sign-in.")
-            }
-
-            await signIn(
-                "google",
-                { redirectTo },
-                { prompt: "select_account" }
-            )
+                getRequestedCallbackUrl() ||
+                (requiredRole === "ADMIN"
+                    ? "/admin/dashboard"
+                    : requiredRole === "DRIVER"
+                    ? "/driver/dashboard"
+                    : "/dashboard")
+            await signIn("google", { redirectTo }, { prompt: "select_account" })
         } catch (err: any) {
-            setError(err.message || "Unable to start Google sign-in.")
+            setError(err.message || "Unable to start Google sign-in. Please try again.")
             setGoogleLoading(false)
         }
     }
