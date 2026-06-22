@@ -149,27 +149,29 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           if (existing) {
             const existingRole = normalizeRole(existing.role) ?? "TRAVELLER"
 
-            // 4a. Portal separation for existing users
+            // ── Portal separation ─────────────────────────────────────────────
             if (existingRole !== expectedRole) {
               if (expectedRole === "TRAVELLER" && (existingRole === "ADMIN" || existingRole === "DRIVER")) {
-                // Staff account trying to use the regular portal
-                return `/login?error=StaffAccount`
+                // Staff account on regular portal — redirect to their correct portal login (no revealing message)
+                const rolePortalLogin = existingRole === "ADMIN"
+                  ? "/login?roleRequired=ADMIN&callbackUrl=%2Fadmin%2Fdashboard"
+                  : "/login?roleRequired=DRIVER&callbackUrl=%2Fdriver%2Fdashboard"
+                return rolePortalLogin
               }
               if ((expectedRole === "ADMIN" || expectedRole === "DRIVER") && existingRole !== expectedRole) {
-                // Wrong staff role (e.g. DRIVER on admin portal)
-                return `/login?error=WrongPortal&roleRequired=${expectedRole}`
+                // Wrong staff role — generic error
+                return `/login?error=Unauthorized&roleRequired=${expectedRole}`
               }
             }
 
             user.id = existing.id
             ;(user as any).role = existingRole
           } else {
-            // 4b. New user — only allowed on the regular portal
+            // New user — only allowed on the regular portal
             if (expectedRole === "ADMIN" || expectedRole === "DRIVER") {
-              return `/login?error=NoAccount&roleRequired=${expectedRole}`
+              return `/login?error=Unauthorized&roleRequired=${expectedRole}`
             }
-            // New TRAVELLER — adapter's createUser will handle creation
-          }
+          }  // New TRAVELLER — adapter's createUser will handle creation
         }
         return true
       } catch (err) {

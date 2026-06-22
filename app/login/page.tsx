@@ -58,25 +58,10 @@ function LoginContent() {
     function authErrorMessage() {
         const authError = searchParams.get("error")
         if (!authError) return ""
-
-        if (authError === "StaffAccount") {
-            return "This is a staff account. Please sign in through your Admin or Driver portal."
-        }
-        if (authError === "WrongPortal") {
-            const rr = searchParams.get("roleRequired")
-            return `No ${rr ?? "staff"} account found for this Google account. Please use the correct portal.`
-        }
-        if (authError === "NoAccount") {
-            const rr = searchParams.get("roleRequired")
-            return `No ${rr ?? "staff"} account exists for this Google account. Please register first.`
-        }
         if (authError === "EmailNotVerified" || authError === "EmailMissing") {
-            return "Google could not verify this email address. Please try a different sign-in method."
+            return "Google could not verify this account. Please try a different sign-in method."
         }
-        if (authError === "SignInFailed") {
-            return "Sign-in failed due to a server error. Please try again."
-        }
-        return `Sign-in error: ${authError}`
+        return "Sign-in could not be completed. Please check your credentials and try again."
     }
 
     useEffect(() => {
