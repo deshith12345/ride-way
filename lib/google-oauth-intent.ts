@@ -39,7 +39,6 @@ export function resolveGoogleOAuthIntent(input: {
   const role = requestedRole || callbackRole || "TRAVELLER"
   const strictRole =
     input.strictRole === true ||
-    Boolean(requestedRole) ||
     role === "ADMIN" ||
     role === "DRIVER"
 
