@@ -342,6 +342,18 @@ export default async function proxy(req: NextRequest) {
         return NextResponse.next()
     }
 
+    // Redirect old-style /login?roleRequired=ADMIN → /admin/login (and same for DRIVER)
+    if (pathname === "/login" && requestedRole === "ADMIN") {
+        const dest = new URL("/admin/login", requestOrigin(req))
+        if (callbackUrl) dest.searchParams.set("callbackUrl", callbackUrl)
+        return NextResponse.redirect(dest)
+    }
+    if (pathname === "/login" && requestedRole === "DRIVER") {
+        const dest = new URL("/driver/login", requestOrigin(req))
+        if (callbackUrl) dest.searchParams.set("callbackUrl", callbackUrl)
+        return NextResponse.redirect(dest)
+    }
+
     if (portal === "admin" && pathname === "/") {
         return redirectToPath(req, "/admin/dashboard")
     }

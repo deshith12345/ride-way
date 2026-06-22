@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react"
 import Link from "next/link"
-import { getProviders, signIn, signOut, useSession } from "next-auth/react"
+import { getProviders, signIn } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { ArrowRight, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -14,7 +14,6 @@ import BrandLogo from "@/components/shared/BrandLogo"
 function LoginContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
-    const { data: session, status } = useSession()
     const [formData, setFormData] = useState({
         email: "",
         password: "",
@@ -26,34 +25,11 @@ function LoginContent() {
     const [googleEnabled, setGoogleEnabled] = useState(false)
 
     const registered = searchParams.get("registered")
-    const roleRequired = searchParams.get("roleRequired")
-    const requiredRole = roleRequired?.toUpperCase()
-    const isStaffLogin = requiredRole === "ADMIN" || requiredRole === "DRIVER"
-    const staffRegisterHref = isStaffLogin
-        ? `/register?${new URLSearchParams({
-            roleRequired: requiredRole,
-            callbackUrl: getRequestedCallbackUrl() || (requiredRole === "ADMIN" ? "/admin/dashboard" : "/driver/dashboard"),
-        }).toString()}`
-        : "/register"
-    const forgotPasswordHref = isStaffLogin
-        ? `/forgot-password?${new URLSearchParams({
-            roleRequired: requiredRole,
-            callbackUrl: getRequestedCallbackUrl() || (requiredRole === "ADMIN" ? "/admin/dashboard" : "/driver/dashboard"),
-        }).toString()}`
-        : "/forgot-password"
-    const currentRole = session?.user?.role?.toUpperCase()
-    const shouldSwitchAccount =
-        searchParams.get("switchAccount") === "1" &&
-        status === "authenticated" &&
-        Boolean(requiredRole) &&
-        currentRole !== requiredRole
 
-    function getRequestedCallbackUrl() {
-        const callbackUrl = searchParams.get("callbackUrl")
-        if (!callbackUrl?.startsWith("/") || callbackUrl.startsWith("//")) return null
-        return callbackUrl
+    function getCallbackUrl() {
+        const cb = searchParams.get("callbackUrl")
+        return cb?.startsWith("/") && !cb.startsWith("//") ? cb : "/dashboard"
     }
-
 
     function authErrorMessage() {
         const authError = searchParams.get("error")
@@ -70,33 +46,16 @@ function LoginContent() {
         })
     }, [])
 
-    useEffect(() => {
-        if (!shouldSwitchAccount || !requiredRole) return
-
-        const requestedCallbackUrl = searchParams.get("callbackUrl")
-        const callbackUrl =
-            requestedCallbackUrl?.startsWith("/") && !requestedCallbackUrl.startsWith("//")
-                ? requestedCallbackUrl
-                : "/dashboard"
-        const params = new URLSearchParams({
-            callbackUrl,
-            roleRequired: requiredRole,
-        })
-
-        signOut({ redirectTo: `/login?${params.toString()}` })
-    }, [searchParams, shouldSwitchAccount, requiredRole])
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setError("")
         setLoading(true)
-
         try {
-            const redirectTo = getRequestedCallbackUrl() || "/dashboard"
+            const redirectTo = getCallbackUrl()
             const result = await signIn("credentials", {
                 email: formData.email,
                 password: formData.password,
-                roleRequired: requiredRole || "",
+                roleRequired: "TRAVELLER",
                 redirect: false,
                 redirectTo,
             })
@@ -118,21 +77,12 @@ function LoginContent() {
         setError("")
         setGoogleLoading(true)
         try {
-            const portalRole =
-                requiredRole === "ADMIN" ? "ADMIN" :
-                requiredRole === "DRIVER" ? "DRIVER" : "TRAVELLER"
-            const redirectTo =
-                getRequestedCallbackUrl() ||
-                (portalRole === "ADMIN" ? "/admin/dashboard" :
-                 portalRole === "DRIVER" ? "/driver/dashboard" : "/dashboard")
-
-            // Tell auth.ts which portal this sign-in is for
+            const redirectTo = getCallbackUrl()
             await fetch("/api/auth/set-login-role", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ role: portalRole }),
+                body: JSON.stringify({ role: "TRAVELLER" }),
             })
-
             await signIn("google", { redirectTo }, { prompt: "select_account" })
         } catch (err: any) {
             setError(err.message || "Unable to start Google sign-in. Please try again.")
@@ -170,11 +120,6 @@ function LoginContent() {
                         </div>
                     )}
 
-                    {roleRequired && (
-                        <div className="mb-6 rounded-2xl border border-blue-500/20 bg-blue-500/10 p-4 text-sm font-bold text-blue-700">
-                            Please sign in with a {roleRequired.toUpperCase()} account to continue.
-                        </div>
-                    )}
 
                     {(error || authErrorMessage()) && (
                         <div className="mb-6 rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-sm font-bold text-red-600">
@@ -203,7 +148,7 @@ function LoginContent() {
                                 <Label htmlFor="password" className="text-[11px] font-bold uppercase tracking-wider text-slate-600">
                                     Password
                                 </Label>
-                                <Link href={forgotPasswordHref} className="text-[11px] font-black uppercase tracking-wider text-blue-600 hover:text-blue-700">
+                                <Link href="/forgot-password" className="text-[11px] font-black uppercase tracking-wider text-blue-600 hover:text-blue-700">
                                     Forgot?
                                 </Link>
                             </div>
@@ -268,8 +213,8 @@ function LoginContent() {
 
                     <p className="mt-8 text-center text-sm font-bold text-slate-500">
                         New on RideWay?{" "}
-                        <Link href={staffRegisterHref} className="text-blue-600 transition-colors hover:text-blue-800">
-                            Create {isStaffLogin ? `${requiredRole === "ADMIN" ? "Admin" : "Driver"} Account` : "Account"}
+                        <Link href="/register" className="text-blue-600 transition-colors hover:text-blue-800">
+                            Create Account
                         </Link>
                     </p>
                 </div>
