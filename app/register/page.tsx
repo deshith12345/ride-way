@@ -1,9 +1,9 @@
 
 "use client"
 
-import { Suspense, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { signOut } from "next-auth/react"
+import { getProviders, signIn, signOut } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -75,6 +75,44 @@ function RegisterContent() {
   })
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [googleEnabled, setGoogleEnabled] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
+
+  useEffect(() => {
+    getProviders().then((providers) => {
+      setGoogleEnabled(Boolean(providers?.google))
+    })
+  }, [])
+
+  const handleGoogleSignup = async () => {
+    setError("")
+    setGoogleLoading(true)
+
+    try {
+      const response = await fetch("/api/auth/google-intent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          roleRequired: role,
+          callbackUrl,
+        }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}))
+        throw new Error(data.error || "Unable to start Google signup.")
+      }
+
+      await signIn(
+        "google",
+        { redirectTo: callbackUrl },
+        { prompt: "select_account" }
+      )
+    } catch (err: any) {
+      setError(err.message || "Unable to start Google signup.")
+      setGoogleLoading(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -205,6 +243,29 @@ function RegisterContent() {
               </div>
             </div>
           )}
+
+          <div className="mb-8 space-y-5">
+            <Button
+              type="button"
+              variant="outline"
+              className="h-14 w-full rounded-2xl border-slate-200 bg-white font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50"
+              disabled={!googleEnabled || googleLoading}
+              onClick={handleGoogleSignup}
+            >
+              {googleLoading ? (
+                <Loader2 className="mr-3 h-5 w-5 animate-spin" />
+              ) : (
+                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" className="mr-3 h-5 w-5" alt="Google" />
+              )}
+              {googleEnabled ? `Sign up as ${roleConfig.label} with Google` : "Google signup unavailable"}
+            </Button>
+
+            <div className="relative flex items-center gap-4">
+              <div className="h-px flex-1 bg-slate-100" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">or use email</span>
+              <div className="h-px flex-1 bg-slate-100" />
+            </div>
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

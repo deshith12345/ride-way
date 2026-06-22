@@ -14,8 +14,8 @@ const errorMap: Record<string, { title: string; message: string; icon: any }> = 
         icon: <ShieldAlert className="h-10 w-10 text-rose-500" />
     },
     AccessDenied: {
-        title: "Access Denied",
-        message: "You do not have permission to sign in. This might be due to security restrictions.",
+        title: "Sign In Failed",
+        message: "Sign-in could not be completed. Return to the sign-in page and try again.",
         icon: <Lock className="h-10 w-10 text-rose-500" />
     },
     Verification: {
@@ -24,8 +24,8 @@ const errorMap: Record<string, { title: string; message: string; icon: any }> = 
         icon: <Mail className="h-10 w-10 text-amber-500" />
     },
     OAuthAccountNotLinked: {
-        title: "Account Already Exists",
-        message: "To confirm your identity, please sign in with the same method you used originally (Email or Google).",
+        title: "Sign In Failed",
+        message: "Sign-in could not be completed with that method. Try again from the correct RideWay portal.",
         icon: <ShieldAlert className="h-10 w-10 text-blue-500" />
     },
     Default: {

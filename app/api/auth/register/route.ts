@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
 
         if (existingUser) {
             return NextResponse.json(
-                { error: "User with this email already exists" },
+                { error: "Registration could not be completed with these details" },
                 { status: 400 }
             )
         }

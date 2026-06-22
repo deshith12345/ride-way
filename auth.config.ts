@@ -29,7 +29,7 @@ export const authConfig = {
     providers,
     pages: {
         signIn: "/login",
-        error: "/auth/error",
+        error: "/login",
     },
     session: { strategy: "jwt" },
     secret: process.env.NEXTAUTH_SECRET,

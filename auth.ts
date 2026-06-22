@@ -12,6 +12,8 @@ import { normalizeRole } from "@/lib/authz"
 import {
   googleOAuthIntentCookieName,
   parseGoogleOAuthIntent,
+  roleFromCallbackUrl,
+  safeOAuthCallbackUrl,
   type GoogleOAuthIntent,
 } from "@/lib/google-oauth-intent"
 
@@ -28,6 +30,10 @@ type LoginAttempt = {
 }
 
 const loginAttempts = new Map<string, LoginAttempt>()
+const callbackUrlCookieNames = [
+  "__Secure-authjs.callback-url",
+  "authjs.callback-url",
+]
 
 function getClientIp(request: Request) {
   const forwardedFor = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
@@ -83,9 +89,45 @@ function clearFailedLogins(key: string) {
 async function getGoogleOAuthIntent() {
   try {
     const cookieStore = await cookies()
-    return parseGoogleOAuthIntent(cookieStore.get(googleOAuthIntentCookieName)?.value)
+    const explicitIntent = parseGoogleOAuthIntent(cookieStore.get(googleOAuthIntentCookieName)?.value)
+    if (explicitIntent) return explicitIntent
+
+    for (const name of callbackUrlCookieNames) {
+      const callbackUrl = cookieStore.get(name)?.value
+      const intent = googleOAuthIntentFromCallbackUrl(callbackUrl)
+      if (intent) return intent
+    }
   } catch {
     return null
+  }
+
+  return null
+}
+
+function googleOAuthIntentFromCallbackUrl(value?: string | null): GoogleOAuthIntent | null {
+  if (!value) return null
+
+  const decodedValue = decodeCookieValue(value)
+  const callbackUrl = safeOAuthCallbackUrl(pathFromCallbackValue(decodedValue))
+  const role = roleFromCallbackUrl(callbackUrl)
+
+  return role ? { role, callbackUrl } : null
+}
+
+function decodeCookieValue(value: string) {
+  try {
+    return decodeURIComponent(value)
+  } catch {
+    return value
+  }
+}
+
+function pathFromCallbackValue(value: string) {
+  try {
+    const url = new URL(value)
+    return `${url.pathname}${url.search}`
+  } catch {
+    return value
   }
 }
 
@@ -238,7 +280,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return true
       } catch (error) {
         console.error("SignIn Callback Error:", error)
-        return false
+        return loginErrorPath("GoogleSignInFailed", await getGoogleOAuthIntent())
       }
     },
     async jwt(params) {

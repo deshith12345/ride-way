@@ -67,15 +67,18 @@ function LoginContent() {
         const authError = searchParams.get("error")
         if (!authError) return ""
 
-        if (authError === "GoogleRoleMismatch") {
-            return requiredRole
-                ? `That Google account is not registered as a ${requiredRole} account. Choose the correct Google account or create a ${requiredRole.toLowerCase()} account first.`
-                : "That Google account belongs to a different RideWay role."
+        if (
+            authError === "GoogleRoleMismatch" ||
+            authError === "GoogleRoleMissing" ||
+            authError === "GoogleSignInFailed" ||
+            authError === "AccessDenied" ||
+            authError === "OAuthAccountNotLinked"
+        ) {
+            return "Sign-in could not be completed. Check that you are using the correct RideWay portal and try again."
         }
-        if (authError === "GoogleEmailUnverified") return "Google has not verified that email address yet."
-        if (authError === "GoogleEmailMissing") return "Google did not return an email address for this account."
-        if (authError === "GoogleRoleMissing") return "This RideWay account is missing a valid role. Contact an administrator."
-        if (authError === "AccessDenied") return "Google sign-in was blocked for this account. Try the correct role page or create the account first."
+        if (authError === "GoogleEmailUnverified" || authError === "GoogleEmailMissing") {
+            return "Google sign-in could not verify the account details. Try another sign-in method."
+        }
         return ""
     }
 
@@ -117,7 +120,7 @@ function LoginContent() {
             })
 
             if (result?.error) {
-                setError(requiredRole ? `Use a ${requiredRole} account to continue.` : "Invalid email or password.")
+                setError("Sign-in could not be completed. Check your details and try again.")
                 setLoading(false)
                 return
             }
