@@ -22,6 +22,7 @@ function LoginContent() {
     })
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
+    const [googleLoading, setGoogleLoading] = useState(false)
     const [googleEnabled, setGoogleEnabled] = useState(false)
 
     const registered = searchParams.get("registered")
@@ -51,6 +52,31 @@ function LoginContent() {
         const callbackUrl = searchParams.get("callbackUrl")
         if (!callbackUrl?.startsWith("/") || callbackUrl.startsWith("//")) return null
         return callbackUrl
+    }
+
+    function getGoogleRole(redirectTo: string) {
+        if (requiredRole === "ADMIN" || requiredRole === "DRIVER" || requiredRole === "TRAVELLER") {
+            return requiredRole
+        }
+        if (redirectTo.startsWith("/admin")) return "ADMIN"
+        if (redirectTo.startsWith("/driver")) return "DRIVER"
+        return "TRAVELLER"
+    }
+
+    function authErrorMessage() {
+        const authError = searchParams.get("error")
+        if (!authError) return ""
+
+        if (authError === "GoogleRoleMismatch") {
+            return requiredRole
+                ? `That Google account is not registered as a ${requiredRole} account. Choose the correct Google account or create a ${requiredRole.toLowerCase()} account first.`
+                : "That Google account belongs to a different RideWay role."
+        }
+        if (authError === "GoogleEmailUnverified") return "Google has not verified that email address yet."
+        if (authError === "GoogleEmailMissing") return "Google did not return an email address for this account."
+        if (authError === "GoogleRoleMissing") return "This RideWay account is missing a valid role. Contact an administrator."
+        if (authError === "AccessDenied") return "Google sign-in was blocked for this account. Try the correct role page or create the account first."
+        return ""
     }
 
     useEffect(() => {
@@ -103,6 +129,37 @@ function LoginContent() {
         }
     }
 
+    const handleGoogleSignIn = async () => {
+        setError("")
+        setGoogleLoading(true)
+
+        try {
+            const redirectTo = getRequestedCallbackUrl() || "/dashboard"
+            const response = await fetch("/api/auth/google-intent", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    roleRequired: getGoogleRole(redirectTo),
+                    callbackUrl: redirectTo,
+                }),
+            })
+
+            if (!response.ok) {
+                const data = await response.json().catch(() => ({}))
+                throw new Error(data.error || "Unable to start Google sign-in.")
+            }
+
+            await signIn(
+                "google",
+                { redirectTo },
+                { prompt: "select_account" }
+            )
+        } catch (err: any) {
+            setError(err.message || "Unable to start Google sign-in.")
+            setGoogleLoading(false)
+        }
+    }
+
     return (
         <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-900 p-6">
             <div className="absolute inset-0 z-0">
@@ -139,9 +196,9 @@ function LoginContent() {
                         </div>
                     )}
 
-                    {error && (
+                    {(error || authErrorMessage()) && (
                         <div className="mb-6 rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-sm font-bold text-red-600">
-                            {error}
+                            {error || authErrorMessage()}
                         </div>
                     )}
 
@@ -217,14 +274,14 @@ function LoginContent() {
                             type="button"
                             variant="outline"
                             className="h-12 w-full rounded-xl border border-white/50 bg-white/20 font-bold text-slate-600 shadow-sm transition-all hover:bg-white/40"
-                            disabled={!googleEnabled}
-                            onClick={() => signIn(
-                                "google",
-                                { redirectTo: getRequestedCallbackUrl() || "/dashboard" },
-                                { prompt: "select_account" }
-                            )}
+                            disabled={!googleEnabled || googleLoading}
+                            onClick={handleGoogleSignIn}
                         >
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" className="mr-3 h-5 w-5" alt="Google" />
+                            {googleLoading ? (
+                                <Loader2 className="mr-3 h-5 w-5 animate-spin" />
+                            ) : (
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" className="mr-3 h-5 w-5" alt="Google" />
+                            )}
                             {googleEnabled ? "Continue with Google" : "Google sign-in unavailable"}
                         </Button>
                     </form>

@@ -4,9 +4,16 @@ import { authConfig } from "./auth.config"
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 import { PrismaAdapter } from "@auth/prisma-adapter"
+import { UserRole } from "@prisma/client"
 import type { Provider } from "next-auth/providers"
+import { cookies } from "next/headers"
 import { getGoogleProvider } from "@/lib/auth-providers"
 import { normalizeRole } from "@/lib/authz"
+import {
+  googleOAuthIntentCookieName,
+  parseGoogleOAuthIntent,
+  type GoogleOAuthIntent,
+} from "@/lib/google-oauth-intent"
 
 const providers: Provider[] = []
 const googleProvider = getGoogleProvider()
@@ -71,6 +78,28 @@ function recordFailedLogin(key: string) {
 
 function clearFailedLogins(key: string) {
   loginAttempts.delete(key)
+}
+
+async function getGoogleOAuthIntent() {
+  try {
+    const cookieStore = await cookies()
+    return parseGoogleOAuthIntent(cookieStore.get(googleOAuthIntentCookieName)?.value)
+  } catch {
+    return null
+  }
+}
+
+function loginErrorPath(error: string, intent: GoogleOAuthIntent | null) {
+  const params = new URLSearchParams({ error })
+
+  if (intent) {
+    params.set("callbackUrl", intent.callbackUrl)
+    if (intent.role !== "TRAVELLER") {
+      params.set("roleRequired", intent.role)
+    }
+  }
+
+  return `/login?${params.toString()}`
 }
 
 if (googleProvider) {
@@ -140,9 +169,28 @@ providers.push(
   })
 )
 
+const prismaAdapter = PrismaAdapter(prisma) as any
+const adapter = {
+  ...prismaAdapter,
+  async createUser(user: any) {
+    const intent = await getGoogleOAuthIntent()
+    const role = intent?.role || normalizeRole(user.role) || "TRAVELLER"
+
+    return prisma.user.create({
+      data: {
+        name: user.name,
+        email: user.email,
+        emailVerified: user.emailVerified,
+        image: user.image,
+        role: UserRole[role],
+      },
+    }) as any
+  },
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
-  adapter: PrismaAdapter(prisma) as any,
+  adapter,
   session: { strategy: "jwt" },
   providers,
   callbacks: {
@@ -150,10 +198,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async signIn({ user, account, profile }) {
       try {
         if (account?.provider === "google") {
-          if ((profile as any)?.email_verified === false) return false
+          const intent = await getGoogleOAuthIntent()
+
+          if ((profile as any)?.email_verified === false) {
+            return loginErrorPath("GoogleEmailUnverified", intent)
+          }
 
           const email = typeof user.email === "string" ? user.email.trim().toLowerCase() : ""
-          if (!email) return false
+          if (!email) return loginErrorPath("GoogleEmailMissing", intent)
           user.email = email
 
           const existingUser = await prisma.user.findUnique({
@@ -167,12 +219,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
           const existingRole = normalizeRole(existingUser?.role)
 
-          if (!existingUser || !existingRole) {
-            return false
+          if (existingUser) {
+            if (!existingRole) {
+              return loginErrorPath("GoogleRoleMissing", intent)
+            }
+
+            if (intent?.role && existingRole !== intent.role) {
+              return loginErrorPath("GoogleRoleMismatch", intent)
+            }
+
+            user.role = existingRole
+            user.id = existingUser.id
+            return true
           }
 
-          user.role = existingRole
-          user.id = existingUser.id
+          user.role = intent?.role || "TRAVELLER"
         }
         return true
       } catch (error) {
