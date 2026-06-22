@@ -19,11 +19,23 @@ interface Route {
   nextTripDate?: string | null;
 }
 
+const routeHeroImages = [
+  {
+    src: "/route-backgrounds/colombo-buddha-lake.jpg",
+    alt: "Colombo lake and Buddha statues",
+  },
+  {
+    src: "/route-backgrounds/galle-lighthouse.jpg",
+    alt: "Galle lighthouse and coastal fort",
+  },
+]
+
 export default function RoutesPage() {
   const [search, setSearch] = useState({ from: "", to: "" })
   const [allRoutes, setAllRoutes] = useState<Route[]>([])
   const [filteredRoutes, setFilteredRoutes] = useState<Route[]>([])
   const [loading, setLoading] = useState(true)
+  const [heroImageIndex, setHeroImageIndex] = useState(0)
 
   useEffect(() => {
     const fetchRoutes = async () => {
@@ -43,6 +55,14 @@ export default function RoutesPage() {
     fetchRoutes()
   }, [])
 
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setHeroImageIndex((current) => (current + 1) % routeHeroImages.length)
+    }, 6000)
+
+    return () => window.clearInterval(timer)
+  }, [])
+
   const handleSearch = () => {
     const results = allRoutes.filter(route =>
       route.origin.toLowerCase().includes(search.from.toLowerCase()) &&
@@ -54,15 +74,35 @@ export default function RoutesPage() {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header Hero */}
-      <div className="bg-slate-900 py-20 text-white relative overflow-hidden">
-        <div className="absolute inset-0 z-0 opacity-20">
-          <img src="/bus-motion.jpg" className="w-full h-full object-cover grayscale" alt="Background" />
+      <div className="relative overflow-hidden py-24 text-white">
+        <div className="absolute inset-0 z-0">
+          {routeHeroImages.map((image, index) => (
+            <img
+              key={image.src}
+              src={image.src}
+              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${heroImageIndex === index ? "opacity-100" : "opacity-0"}`}
+              alt={image.alt}
+            />
+          ))}
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/45 via-slate-900/10 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/25 via-transparent to-transparent" />
         </div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-3xl">
-            <Badge className="bg-blue-500 text-white mb-4 px-4 py-1.5 rounded-full border-none font-bold uppercase tracking-widest text-[10px]">Route Explorer</Badge>
-            <h1 className="text-4xl lg:text-6xl font-black mb-6 tracking-tight">Discover Sri Lanka by Bus</h1>
-            <p className="text-xl text-slate-300 font-medium">Connecting major cities across the island with reliable, comfortable, and affordable bus services.</p>
+            <Badge className="mb-4 rounded-full border border-white/30 bg-white/20 px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-white shadow-lg backdrop-blur-md">Route Explorer</Badge>
+            <h1 className="mb-6 text-4xl font-black tracking-tight drop-shadow-2xl lg:text-6xl">Discover Sri Lanka by Bus</h1>
+            <p className="max-w-2xl text-xl font-semibold leading-8 text-white drop-shadow-lg">Connecting major cities across the island with reliable, comfortable, and affordable bus services.</p>
+            <div className="mt-8 flex items-center gap-3">
+              {routeHeroImages.map((image, index) => (
+                <button
+                  key={image.src}
+                  type="button"
+                  aria-label={`Show ${image.alt}`}
+                  onClick={() => setHeroImageIndex(index)}
+                  className={`h-2.5 rounded-full transition-all ${heroImageIndex === index ? "w-10 bg-white" : "w-2.5 bg-white/50 hover:bg-white/80"}`}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </div>
