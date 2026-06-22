@@ -33,6 +33,17 @@ NEXTAUTH_SECRET="replace-with-a-long-random-secret"
 
 After those values are set, the Google button on `/login` becomes active.
 
+## Password Reset Email
+
+Password recovery uses one-time reset links that expire after 30 minutes. In Vercel, set these environment variables so users can receive reset emails:
+
+```text
+RESEND_API_KEY="your-resend-api-key"
+PASSWORD_RESET_FROM_EMAIL="RideWay <support@your-domain.com>"
+```
+
+Use a verified sender domain in Resend for production delivery.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.

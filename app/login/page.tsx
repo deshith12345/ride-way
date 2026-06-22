@@ -34,6 +34,12 @@ function LoginContent() {
             callbackUrl: getRequestedCallbackUrl() || (requiredRole === "ADMIN" ? "/admin/dashboard" : "/driver/dashboard"),
         }).toString()}`
         : "/register"
+    const forgotPasswordHref = isStaffLogin
+        ? `/forgot-password?${new URLSearchParams({
+            roleRequired: requiredRole,
+            callbackUrl: getRequestedCallbackUrl() || (requiredRole === "ADMIN" ? "/admin/dashboard" : "/driver/dashboard"),
+        }).toString()}`
+        : "/forgot-password"
     const currentRole = session?.user?.role?.toUpperCase()
     const shouldSwitchAccount =
         searchParams.get("switchAccount") === "1" &&
@@ -160,7 +166,7 @@ function LoginContent() {
                                 <Label htmlFor="password" className="text-[11px] font-bold uppercase tracking-wider text-slate-600">
                                     Password
                                 </Label>
-                                <Link href="/forgot-password" className="text-[11px] font-black uppercase tracking-wider text-blue-600 hover:text-blue-700">
+                                <Link href={forgotPasswordHref} className="text-[11px] font-black uppercase tracking-wider text-blue-600 hover:text-blue-700">
                                     Forgot?
                                 </Link>
                             </div>

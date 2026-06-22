@@ -190,12 +190,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (userId || email) {
         const dbUser = await prisma.user.findFirst({
           where: userId ? { id: userId } : { email },
-          select: { id: true, role: true },
+          select: { id: true, role: true, name: true, email: true, image: true },
         })
 
         if (dbUser) {
           const role = normalizeRole(dbUser.role)
           token.id = dbUser.id
+          token.name = dbUser.name
+          token.email = dbUser.email
+          token.picture = dbUser.image
           if (role) token.role = role
           else delete token.role
         }

@@ -12,6 +12,7 @@ import Link from "next/link"
 import { ShieldCheck, Loader2 } from "lucide-react"
 import BrandLogo from "@/components/shared/BrandLogo"
 import { normalizeRole, type AppRole } from "@/lib/authz"
+import { isValidEmailAddress, normalizeSriLankanMobile, sriLankanMobileHelpText } from "@/lib/validation"
 
 const roleConfigs: Record<AppRole, {
   label: string
@@ -84,6 +85,17 @@ function RegisterContent() {
       return
     }
 
+    if (!isValidEmailAddress(formData.email)) {
+      setError("Enter a valid email address.")
+      return
+    }
+
+    const normalizedPhone = normalizeSriLankanMobile(formData.phone)
+    if (!normalizedPhone) {
+      setError(sriLankanMobileHelpText)
+      return
+    }
+
     if (!formData.acceptTerms) {
       setError("Please accept the terms and conditions")
       return
@@ -97,9 +109,9 @@ function RegisterContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: `${formData.firstName} ${formData.lastName}`,
-          email: formData.email,
+          email: formData.email.trim().toLowerCase(),
           password: formData.password,
-          phone: formData.phone,
+          phone: normalizedPhone,
           role,
         }),
       })
@@ -107,7 +119,8 @@ function RegisterContent() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || "Registration failed")
+        const detail = Array.isArray(data.details) && data.details[0]?.message ? data.details[0].message : ""
+        throw new Error(detail || data.error || "Registration failed")
       }
 
       await signOut({ redirect: false })
@@ -242,7 +255,12 @@ function RegisterContent() {
                 className="h-12 rounded-xl border-slate-200 focus:ring-blue-500"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                onBlur={() => {
+                  const normalizedPhone = normalizeSriLankanMobile(formData.phone)
+                  if (normalizedPhone) setFormData({ ...formData, phone: normalizedPhone })
+                }}
               />
+              <p className="ml-1 text-xs font-semibold text-slate-400">Sri Lankan mobile only. Example: +94 77 123 4567</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -252,7 +270,7 @@ function RegisterContent() {
                   id="password"
                   type="password"
                   required
-                  placeholder="••••••••"
+                  placeholder="At least 8 characters"
                   minLength={8}
                   className="h-12 rounded-xl border-slate-200 focus:ring-blue-500"
                   value={formData.password}
@@ -265,7 +283,7 @@ function RegisterContent() {
                   id="confirmPassword"
                   type="password"
                   required
-                  placeholder="••••••••"
+                  placeholder="Repeat password"
                   className="h-12 rounded-xl border-slate-200 focus:ring-blue-500"
                   value={formData.confirmPassword}
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}

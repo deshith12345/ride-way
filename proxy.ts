@@ -290,6 +290,7 @@ export default async function proxy(req: NextRequest) {
         "/login",
         "/privacy",
         "/register",
+        "/reset-password",
         "/routes",
         "/search",
         "/terms",
@@ -337,11 +338,11 @@ export default async function proxy(req: NextRequest) {
         return redirectToPath(req, "/driver/dashboard")
     }
 
-    if (portal === "admin" && !pathname.startsWith("/admin") && !pathname.startsWith("/api") && pathname !== "/login" && pathname !== "/register" && pathname !== "/auth/error" && pathname !== "/ticket/verify") {
+    if (portal === "admin" && !pathname.startsWith("/admin") && !pathname.startsWith("/api") && pathname !== "/login" && pathname !== "/register" && pathname !== "/forgot-password" && pathname !== "/reset-password" && pathname !== "/auth/error" && pathname !== "/ticket/verify") {
         return redirectToPath(req, "/admin/dashboard")
     }
 
-    if (portal === "driver" && !pathname.startsWith("/driver") && !pathname.startsWith("/api") && pathname !== "/login" && pathname !== "/register" && pathname !== "/auth/error" && pathname !== "/ticket/verify") {
+    if (portal === "driver" && !pathname.startsWith("/driver") && !pathname.startsWith("/api") && pathname !== "/login" && pathname !== "/register" && pathname !== "/forgot-password" && pathname !== "/reset-password" && pathname !== "/auth/error" && pathname !== "/ticket/verify") {
         return redirectToPath(req, "/driver/dashboard")
     }
 

@@ -10,7 +10,9 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
         pathname.startsWith("/admin") ||
         pathname.startsWith("/driver") ||
         pathname === "/login" ||
-        pathname === "/register"
+        pathname === "/register" ||
+        pathname === "/forgot-password" ||
+        pathname === "/reset-password"
 
     return (
         <>

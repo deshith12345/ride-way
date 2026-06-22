@@ -2,6 +2,7 @@ import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server"
 import { z } from "zod"
+import { normalizeSriLankanMobile } from "@/lib/validation"
 
 const updateProfileSchema = z.object({
     name: z.string().trim().min(2).max(80).optional(),
@@ -32,7 +33,16 @@ export async function PATCH(req: Request) {
 
         const updateData: any = {}
         if (name !== undefined) updateData.name = name
-        if (phone !== undefined) updateData.phone = phone
+        if (phone !== undefined) {
+            const normalizedPhone = normalizeSriLankanMobile(phone)
+            if (!normalizedPhone) {
+                return NextResponse.json(
+                    { error: "Enter a valid Sri Lankan mobile number" },
+                    { status: 400 }
+                )
+            }
+            updateData.phone = normalizedPhone
+        }
 
         const user = await prisma.user.update({
             where: { id: session.user.id },

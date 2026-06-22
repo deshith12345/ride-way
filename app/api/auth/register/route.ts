@@ -3,12 +3,13 @@ import { prisma } from "@/lib/prisma"
 import { UserRole } from "@prisma/client"
 import bcrypt from "bcryptjs"
 import { z } from "zod"
+import { isValidEmailAddress, normalizeSriLankanMobile } from "@/lib/validation"
 
 const registerSchema = z.object({
     name: z.string().min(2, "Name must be at least 2 characters"),
-    email: z.string().trim().toLowerCase().email("Invalid email address"),
+    email: z.string().trim().toLowerCase().refine(isValidEmailAddress, "Invalid email address"),
     password: z.string().min(8, "Password must be at least 8 characters").max(128, "Password is too long"),
-    phone: z.string().optional(),
+    phone: z.string().trim().min(1, "Phone number is required"),
     role: z.enum(["ADMIN", "DRIVER", "TRAVELLER"]).default("TRAVELLER"),
 })
 
@@ -18,6 +19,14 @@ export async function POST(req: NextRequest) {
 
         // Validate input
         const validatedData = registerSchema.parse(body)
+        const normalizedPhone = normalizeSriLankanMobile(validatedData.phone)
+
+        if (!normalizedPhone) {
+            return NextResponse.json(
+                { error: "Enter a valid Sri Lankan mobile number" },
+                { status: 400 }
+            )
+        }
 
         // Check if user already exists
         const existingUser = await prisma.user.findUnique({
@@ -40,7 +49,7 @@ export async function POST(req: NextRequest) {
                 name: validatedData.name,
                 email: validatedData.email,
                 password: hashedPassword,
-                phone: validatedData.phone,
+                phone: normalizedPhone,
                 role: UserRole[validatedData.role],
             },
             select: {

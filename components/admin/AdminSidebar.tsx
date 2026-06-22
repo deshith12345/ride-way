@@ -59,10 +59,16 @@ export default function AdminSidebar() {
     }, [session?.user?.role])
 
     useEffect(() => {
-        loadSupportOpenCount()
-        const timer = window.setInterval(loadSupportOpenCount, 5000)
+        const refresh = () => {
+            void loadSupportOpenCount()
+        }
+        const initialTimer = window.setTimeout(refresh, 0)
+        const timer = window.setInterval(refresh, 5000)
 
-        return () => window.clearInterval(timer)
+        return () => {
+            window.clearTimeout(initialTimer)
+            window.clearInterval(timer)
+        }
     }, [loadSupportOpenCount])
 
     return (

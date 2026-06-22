@@ -72,6 +72,15 @@ export const authConfig = {
                 if (typeof token.id === "string") {
                     session.user.id = token.id
                 }
+                if (typeof token.name === "string" || token.name === null) {
+                    session.user.name = token.name
+                }
+                if (typeof token.email === "string") {
+                    session.user.email = token.email
+                }
+                if (typeof token.picture === "string") {
+                    session.user.image = token.picture
+                }
             }
             return session
         },

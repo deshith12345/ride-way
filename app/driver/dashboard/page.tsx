@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { MapPin, Clock, Users, Navigation, Calendar, ShieldCheck, ChevronRight, LogOut, Loader2 } from "lucide-react"
+import { MapPin, Clock, Users, Navigation, Calendar, ShieldCheck, ChevronRight, LogOut, Loader2, UserRound } from "lucide-react"
 import Link from "next/link"
 import { signOut, useSession } from "next-auth/react"
 import { format } from "date-fns"
@@ -81,6 +81,15 @@ function DriverDashboard() {
                                 session?.user?.name?.[0] || "D"
                             )}
                         </div>
+                        <Link href="/driver/profile">
+                            <Button
+                                variant="outline"
+                                className="rounded-xl border-slate-200 font-bold hover:border-blue-100 hover:bg-blue-50 hover:text-blue-600"
+                            >
+                                <UserRound className="h-4 w-4 sm:mr-2" />
+                                <span className="hidden sm:inline">Profile</span>
+                            </Button>
+                        </Link>
                         <Button
                             variant="outline"
                             onClick={() => signOut({ redirectTo: "/" })}
@@ -99,7 +108,7 @@ function DriverDashboard() {
                             <div className="lg:flex-1 p-8">
                                 <div className="flex items-center gap-3 mb-6">
                                     <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">NEXT ASSIGNED TRIP • {format(new Date(data.activeTrip.departureTime), 'hh:mm a')}</span>
+                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">NEXT ASSIGNED TRIP - {format(new Date(data.activeTrip.departureTime), 'hh:mm a')}</span>
                                 </div>
 
                                 <h2 className="text-4xl font-black text-slate-900 mb-8 flex items-center gap-4">
