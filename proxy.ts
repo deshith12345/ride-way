@@ -91,9 +91,12 @@ function expectedRoleForRequest(
 }
 
 function loginUrlFor(req: NextRequest, targetPath: string, role: RoleName) {
-    const loginUrl = new URL("/login", requestOrigin(req))
+    // Use portal-specific login pages for admin and driver
+    const loginPath =
+        role === "ADMIN"   ? "/admin/login"  :
+        role === "DRIVER"  ? "/driver/login" : "/login"
+    const loginUrl = new URL(loginPath, requestOrigin(req))
     loginUrl.searchParams.set("callbackUrl", targetPath)
-    loginUrl.searchParams.set("roleRequired", role)
     return loginUrl
 }
 
@@ -284,6 +287,7 @@ export default async function proxy(req: NextRequest) {
     const publicRoutes = [
         "/",
         "/about",
+        "/admin/login",
         "/auth/error",
         "/api/auth",
         "/api/locations",
@@ -292,6 +296,7 @@ export default async function proxy(req: NextRequest) {
         "/api/track",
         "/api/trips",
         "/contact",
+        "/driver/login",
         "/forgot-password",
         "/help",
         "/login",
@@ -306,7 +311,7 @@ export default async function proxy(req: NextRequest) {
     ]
     const isPublicRoute = publicRoutes.some((route) => matchesRoute(pathname, route))
 
-    const authRoutes = ["/login", "/register"]
+    const authRoutes = ["/login", "/register", "/admin/login", "/driver/login"]
     const isAuthRoute = authRoutes.includes(pathname)
     const isAuthApiRoute = pathname.startsWith("/api/auth")
     const callbackUrl = req.nextUrl.searchParams.get("callbackUrl") || ""
