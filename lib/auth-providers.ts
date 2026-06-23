@@ -81,6 +81,17 @@ export function getGoogleProvider(): Provider | null {
     clientId: googleClientId,
     clientSecret: googleClientSecret,
     allowDangerousEmailAccountLinking: true,
+    account(account) {
+      return {
+        access_token: account.access_token,
+        expires_at: account.expires_at,
+        id_token: account.id_token,
+        refresh_token: account.refresh_token,
+        scope: account.scope,
+        session_state: account.session_state,
+        token_type: account.token_type,
+      }
+    },
     profile(profile) {
       return {
         id: profile.sub,
