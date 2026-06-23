@@ -24,6 +24,31 @@ const googleClientSecret = firstEnvValue(
 
 export const isGoogleAuthConfigured = Boolean(googleClientId && googleClientSecret)
 
+function envIsSet(...names: string[]) {
+  return names.some((name) => Boolean(process.env[name]?.trim()))
+}
+
+export function googleAuthConfigStatus() {
+  const clientIdConfigured = envIsSet(
+    "GOOGLE_CLIENT_ID",
+    "AUTH_GOOGLE_ID",
+    "AUTH_GOOGLE_CLIENT_ID"
+  )
+  const clientSecretConfigured = envIsSet(
+    "GOOGLE_CLIENT_SECRET",
+    "AUTH_GOOGLE_SECRET",
+    "AUTH_GOOGLE_CLIENT_SECRET"
+  )
+
+  return {
+    configured: clientIdConfigured && clientSecretConfigured,
+    clientIdConfigured,
+    clientSecretConfigured,
+    adminAllowlistConfigured: envIsSet("GOOGLE_ADMIN_SIGNUP_EMAILS", "GOOGLE_ADMIN_EMAILS"),
+    driverAllowlistConfigured: envIsSet("GOOGLE_DRIVER_SIGNUP_EMAILS", "GOOGLE_DRIVER_EMAILS"),
+  }
+}
+
 function emailSetFromEnv(...names: string[]) {
   const values = names.flatMap((name) =>
     (process.env[name] || "")

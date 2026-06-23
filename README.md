@@ -25,11 +25,13 @@ https://your-vercel-domain.vercel.app/api/auth/callback/google
 3. Copy `env.example` values into your local `.env.local` and set:
 
 ```text
-GOOGLE_CLIENT_ID="your-google-client-id"
-GOOGLE_CLIENT_SECRET="your-google-client-secret"
-NEXTAUTH_URL="https://your-vercel-domain.vercel.app"
-NEXTAUTH_SECRET="replace-with-a-long-random-secret"
+AUTH_GOOGLE_ID="your-google-client-id"
+AUTH_GOOGLE_SECRET="your-google-client-secret"
+AUTH_URL="https://your-vercel-domain.vercel.app"
+AUTH_SECRET="replace-with-a-long-random-secret"
 ```
+
+The app also supports the legacy aliases `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `NEXTAUTH_URL`, and `NEXTAUTH_SECRET`.
 
 Traveller accounts can self-create with Google. Admin and driver Google access is role checked: existing matching users can sign in/link Google, and new admin/driver self-sign-up requires the email to be listed in `GOOGLE_ADMIN_SIGNUP_EMAILS` or `GOOGLE_DRIVER_SIGNUP_EMAILS`.
 
@@ -39,6 +41,8 @@ GOOGLE_DRIVER_SIGNUP_EMAILS="driver1@example.com,driver2@example.com"
 ```
 
 After those values are set, the Google buttons on `/login`, `/register`, `/admin/login`, and `/driver/login` become active.
+
+After deployment, open `/api/auth/config-status` on your Vercel domain to verify that the production environment has the Google and Auth secrets loaded. The endpoint returns booleans only and does not expose secret values.
 
 ## Password Reset Email
 
