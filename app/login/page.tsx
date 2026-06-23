@@ -1,8 +1,8 @@
 "use client"
 
-import { Suspense, useEffect, useState } from "react"
+import { Suspense, useState } from "react"
 import Link from "next/link"
-import { getProviders, signIn } from "next-auth/react"
+import { signIn } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { ArrowRight, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -21,8 +21,6 @@ function LoginContent() {
     })
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
-    const [googleLoading, setGoogleLoading] = useState(false)
-    const [googleEnabled, setGoogleEnabled] = useState(false)
 
     const registered = searchParams.get("registered")
 
@@ -34,17 +32,8 @@ function LoginContent() {
     function authErrorMessage() {
         const authError = searchParams.get("error")
         if (!authError) return ""
-        if (authError === "EmailNotVerified" || authError === "EmailMissing") {
-            return "Google could not verify this account. Please try a different sign-in method."
-        }
         return "Sign-in could not be completed. Please check your credentials and try again."
     }
-
-    useEffect(() => {
-        getProviders().then((providers) => {
-            setGoogleEnabled(Boolean(providers?.google))
-        })
-    }, [])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -73,22 +62,6 @@ function LoginContent() {
         }
     }
 
-    const handleGoogleSignIn = async () => {
-        setError("")
-        setGoogleLoading(true)
-        try {
-            const redirectTo = getCallbackUrl()
-            await fetch("/api/auth/set-login-role", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ role: "TRAVELLER" }),
-            })
-            await signIn("google", { redirectTo }, { prompt: "select_account" })
-        } catch (err: any) {
-            setError(err.message || "Unable to start Google sign-in. Please try again.")
-            setGoogleLoading(false)
-        }
-    }
 
     return (
         <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-900 p-6">
@@ -189,26 +162,6 @@ function LoginContent() {
                             )}
                         </Button>
 
-                        <div className="relative flex items-center gap-4 py-2">
-                            <div className="h-px flex-1 bg-slate-200" />
-                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">or</span>
-                            <div className="h-px flex-1 bg-slate-200" />
-                        </div>
-
-                        <Button
-                            type="button"
-                            variant="outline"
-                            className="h-12 w-full rounded-xl border border-white/50 bg-white/20 font-bold text-slate-600 shadow-sm transition-all hover:bg-white/40"
-                            disabled={!googleEnabled || googleLoading}
-                            onClick={handleGoogleSignIn}
-                        >
-                            {googleLoading ? (
-                                <Loader2 className="mr-3 h-5 w-5 animate-spin" />
-                            ) : (
-                                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" className="mr-3 h-5 w-5" alt="Google" />
-                            )}
-                            {googleEnabled ? "Continue with Google" : "Google sign-in unavailable"}
-                        </Button>
                     </form>
 
                     <p className="mt-8 text-center text-sm font-bold text-slate-500">
