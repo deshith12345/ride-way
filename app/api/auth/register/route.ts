@@ -17,9 +17,15 @@ export async function POST(req: NextRequest) {
     try {
         const body = await req.json()
 
-        // Validate input
         const validatedData = registerSchema.parse(body)
         const normalizedPhone = normalizeSriLankanMobile(validatedData.phone)
+
+        if (validatedData.role !== "TRAVELLER") {
+            return NextResponse.json(
+                { error: "Admin and driver accounts must be approved from the correct RideWay portal." },
+                { status: 403 }
+            )
+        }
 
         if (!normalizedPhone) {
             return NextResponse.json(
@@ -28,7 +34,6 @@ export async function POST(req: NextRequest) {
             )
         }
 
-        // Check if user already exists
         const existingUser = await prisma.user.findUnique({
             where: { email: validatedData.email },
         })
@@ -40,17 +45,15 @@ export async function POST(req: NextRequest) {
             )
         }
 
-        // Hash password
         const hashedPassword = await bcrypt.hash(validatedData.password, 10)
 
-        // Create user
         const user = await prisma.user.create({
             data: {
                 name: validatedData.name,
                 email: validatedData.email,
                 password: hashedPassword,
                 phone: normalizedPhone,
-                role: UserRole[validatedData.role],
+                role: UserRole.TRAVELLER,
             },
             select: {
                 id: true,

@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import BrandLogo from "@/components/shared/BrandLogo"
+import GoogleSignInButton from "@/components/shared/GoogleSignInButton"
 
 function LoginContent() {
     const router = useRouter()
@@ -32,6 +33,15 @@ function LoginContent() {
     function authErrorMessage() {
         const authError = searchParams.get("error")
         if (!authError) return ""
+        if (authError === "OAuthRoleMismatch") {
+            return "This Google account belongs to a different RideWay portal. Use the admin or driver login page."
+        }
+        if (authError === "OAuthEmailNotVerified") {
+            return "Google did not confirm this email as verified. Use a verified Google account."
+        }
+        if (authError === "OAuthEmailMissing") {
+            return "Google did not return an email address for this account."
+        }
         return "Sign-in could not be completed. Please check your credentials and try again."
     }
 
@@ -99,6 +109,18 @@ function LoginContent() {
                             {error || authErrorMessage()}
                         </div>
                     )}
+
+                    <GoogleSignInButton
+                        roleRequired="TRAVELLER"
+                        callbackUrl={getCallbackUrl()}
+                        onError={setError}
+                    />
+
+                    <div className="my-6 flex items-center gap-3">
+                        <div className="h-px flex-1 bg-slate-200" />
+                        <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">or use email</span>
+                        <div className="h-px flex-1 bg-slate-200" />
+                    </div>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="space-y-2">

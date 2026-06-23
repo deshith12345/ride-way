@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import Link from "next/link"
 import { ShieldCheck, Loader2 } from "lucide-react"
 import BrandLogo from "@/components/shared/BrandLogo"
+import GoogleSignInButton from "@/components/shared/GoogleSignInButton"
 import { normalizeRole, type AppRole } from "@/lib/authz"
 import { isValidEmailAddress, normalizeSriLankanMobile, sriLankanMobileHelpText } from "@/lib/validation"
 
@@ -58,12 +59,15 @@ function RegisterContent() {
   const roleConfig = roleConfigs[role]
   const callbackUrl = safeCallbackUrl(searchParams.get("callbackUrl"), role)
   const loginHref =
-    role === "TRAVELLER"
-      ? "/login"
-      : `/login?${new URLSearchParams({
+    role === "ADMIN"
+      ? `/admin/login?${new URLSearchParams({
         callbackUrl,
-        roleRequired: role,
       }).toString()}`
+      : role === "DRIVER"
+        ? `/driver/login?${new URLSearchParams({
+          callbackUrl,
+        }).toString()}`
+        : "/login"
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -75,10 +79,24 @@ function RegisterContent() {
   })
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const isTravellerRegistration = role === "TRAVELLER"
+
+  const legacyLoginHref =
+    role === "TRAVELLER"
+      ? "/login"
+      : `/login?${new URLSearchParams({
+        callbackUrl,
+        roleRequired: role,
+      }).toString()}`
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+
+    if (!isTravellerRegistration) {
+      setError("Admin and driver accounts must use the portal Google flow or be approved by an existing admin.")
+      return
+    }
 
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match")
@@ -129,7 +147,7 @@ function RegisterContent() {
         callbackUrl,
       })
       if (role !== "TRAVELLER") loginParams.set("roleRequired", role)
-      router.push(`/login?${loginParams.toString()}`)
+      router.push(role === "TRAVELLER" ? `/login?${loginParams.toString()}` : legacyLoginHref)
     } catch (err: any) {
       setError(err.message || "Something went wrong")
     } finally {
@@ -206,8 +224,22 @@ function RegisterContent() {
             </div>
           )}
 
+          <GoogleSignInButton
+            roleRequired={role}
+            callbackUrl={callbackUrl}
+            label={`Continue with Google as ${roleConfig.label}`}
+            onError={setError}
+          />
 
+          <div className="my-8 flex items-center gap-3">
+            <span className="h-px flex-1 bg-slate-100"></span>
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">
+              {isTravellerRegistration ? "or use details" : "portal approval"}
+            </span>
+            <span className="h-px flex-1 bg-slate-100"></span>
+          </div>
 
+          {isTravellerRegistration ? (
           <form onSubmit={handleSubmit} className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2 text-left">
@@ -317,6 +349,11 @@ function RegisterContent() {
               </Button>
             </div>
           </form>
+          ) : (
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-5 text-sm font-semibold leading-6 text-slate-600">
+              Admin and driver Google sign-up only works for existing role-matched accounts or approved email allowlists. Ask an existing admin to approve your email before using this portal.
+            </div>
+          )}
 
           <p className="text-center text-sm font-bold text-slate-400 mt-12 uppercase tracking-widest flex items-center justify-center gap-4">
             <span className="h-px w-12 bg-slate-100"></span>

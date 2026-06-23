@@ -11,9 +11,9 @@ npm run build
 
 Deploy the project to Vercel and open the production URL from your Vercel dashboard.
 
-## Google Sign In
+## Google Sign In And Sign Up
 
-RideWay supports Google authentication for existing verified admin, driver, and traveller accounts. New RideWay accounts are created with the password form on `/register`.
+RideWay supports Google authentication for traveller, driver, and admin portals. The public site uses traveller-only Google sign-in/sign-up, while `/admin/login` and `/driver/login` start isolated portal-specific Google flows.
 
 1. Create OAuth credentials in Google Cloud Console.
 2. Add this authorized redirect URI:
@@ -31,7 +31,14 @@ NEXTAUTH_URL="https://your-vercel-domain.vercel.app"
 NEXTAUTH_SECRET="replace-with-a-long-random-secret"
 ```
 
-After those values are set, the Google button on `/login` becomes active.
+Traveller accounts can self-create with Google. Admin and driver Google access is role checked: existing matching users can sign in/link Google, and new portal self-sign-up requires the email to be listed in `GOOGLE_ADMIN_SIGNUP_EMAILS` or `GOOGLE_DRIVER_SIGNUP_EMAILS`.
+
+```text
+GOOGLE_ADMIN_SIGNUP_EMAILS="owner@example.com,ops@example.com"
+GOOGLE_DRIVER_SIGNUP_EMAILS="driver1@example.com,driver2@example.com"
+```
+
+After those values are set, the Google buttons on `/login`, `/register`, `/admin/login`, and `/driver/login` become active.
 
 ## Password Reset Email
 

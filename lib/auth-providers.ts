@@ -1,5 +1,6 @@
 import GoogleProvider from "next-auth/providers/google"
 import type { Provider } from "next-auth/providers"
+import type { AppRole } from "@/lib/authz"
 
 function firstEnvValue(...names: string[]) {
   for (const name of names) {
@@ -22,6 +23,29 @@ const googleClientSecret = firstEnvValue(
 )
 
 export const isGoogleAuthConfigured = Boolean(googleClientId && googleClientSecret)
+
+function emailSetFromEnv(...names: string[]) {
+  const values = names.flatMap((name) =>
+    (process.env[name] || "")
+      .split(/[\s,;]+/)
+      .map((email) => email.trim().toLowerCase())
+      .filter(Boolean)
+  )
+
+  return new Set(values)
+}
+
+export function isGooglePortalSignupAllowed(role: AppRole, email: string) {
+  if (role === "TRAVELLER") return true
+
+  const normalizedEmail = email.trim().toLowerCase()
+  const allowList =
+    role === "ADMIN"
+      ? emailSetFromEnv("GOOGLE_ADMIN_SIGNUP_EMAILS", "GOOGLE_ADMIN_EMAILS")
+      : emailSetFromEnv("GOOGLE_DRIVER_SIGNUP_EMAILS", "GOOGLE_DRIVER_EMAILS")
+
+  return allowList.has(normalizedEmail) || allowList.has("*")
+}
 
 export function getGoogleProvider(): Provider | null {
   if (!googleClientId || !googleClientSecret) {
