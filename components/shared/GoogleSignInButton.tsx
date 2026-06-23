@@ -29,13 +29,12 @@ export default function GoogleSignInButton({
     onError?.("")
 
     try {
-      const response = await fetch("/api/auth/google-intent", {
+      const response = await fetch("/api/auth/google/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          roleRequired,
+          role: roleRequired,
           callbackUrl,
-          strictRole: roleRequired !== "TRAVELLER",
         }),
       })
       const data = await response.json().catch(() => ({}))

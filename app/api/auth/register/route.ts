@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
 
         if (validatedData.role !== "TRAVELLER") {
             return NextResponse.json(
-                { error: "Admin and driver accounts must be approved from the correct RideWay portal." },
+                { error: "Admin and driver accounts must be approved for the correct RideWay sign-in area." },
                 { status: 403 }
             )
         }

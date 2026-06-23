@@ -13,7 +13,7 @@ Deploy the project to Vercel and open the production URL from your Vercel dashbo
 
 ## Google Sign In And Sign Up
 
-RideWay supports Google authentication for traveller, driver, and admin portals. The public site uses traveller-only Google sign-in/sign-up, while `/admin/login` and `/driver/login` start isolated portal-specific Google flows.
+RideWay supports Google authentication for traveller, driver, and admin sign-in areas. The public site uses traveller-only Google sign-in/sign-up, while `/admin/login` and `/driver/login` start isolated role-specific Google flows.
 
 1. Create OAuth credentials in Google Cloud Console.
 2. Add this authorized redirect URI:
@@ -31,7 +31,7 @@ NEXTAUTH_URL="https://your-vercel-domain.vercel.app"
 NEXTAUTH_SECRET="replace-with-a-long-random-secret"
 ```
 
-Traveller accounts can self-create with Google. Admin and driver Google access is role checked: existing matching users can sign in/link Google, and new portal self-sign-up requires the email to be listed in `GOOGLE_ADMIN_SIGNUP_EMAILS` or `GOOGLE_DRIVER_SIGNUP_EMAILS`.
+Traveller accounts can self-create with Google. Admin and driver Google access is role checked: existing matching users can sign in/link Google, and new admin/driver self-sign-up requires the email to be listed in `GOOGLE_ADMIN_SIGNUP_EMAILS` or `GOOGLE_DRIVER_SIGNUP_EMAILS`.
 
 ```text
 GOOGLE_ADMIN_SIGNUP_EMAILS="owner@example.com,ops@example.com"
@@ -42,7 +42,7 @@ After those values are set, the Google buttons on `/login`, `/register`, `/admin
 
 ## Password Reset Email
 
-Password recovery uses one-time reset links that expire after 30 minutes. The app can send reset emails through Gmail SMTP using a Gmail App Password.
+Password recovery uses one-time links that expire after 30 minutes. The same flow lets Google-created accounts set a RideWay password. The app can send reset emails through Gmail SMTP using a Gmail App Password.
 
 In Vercel, set:
 

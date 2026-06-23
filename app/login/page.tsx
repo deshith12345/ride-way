@@ -34,7 +34,10 @@ function LoginContent() {
         const authError = searchParams.get("error")
         if (!authError) return ""
         if (authError === "OAuthRoleMismatch") {
-            return "This Google account belongs to a different RideWay portal. Use the admin or driver login page."
+            return "This Google account belongs to a different RideWay sign-in area. Use the admin or driver login page."
+        }
+        if (authError === "OAuthRoleSignupRestricted") {
+            return "That Google account is not approved for this RideWay sign-in area."
         }
         if (authError === "OAuthEmailNotVerified") {
             return "Google did not confirm this email as verified. Use a verified Google account."

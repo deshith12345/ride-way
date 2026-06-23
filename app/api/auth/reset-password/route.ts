@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
             prisma.verificationToken.deleteMany({ where: { identifier } }),
         ])
 
-        return NextResponse.json({ message: "Password updated successfully" })
+        return NextResponse.json({ message: "Password saved successfully" })
     } catch (error) {
         console.error("Reset password failed:", error)
         return NextResponse.json({ error: "Unable to reset password" }, { status: 500 })

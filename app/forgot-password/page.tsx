@@ -15,8 +15,8 @@ function loginHref(roleRequired: string | null, callbackUrl: string | null) {
   const role = roleRequired?.toUpperCase()
   if (role !== "ADMIN" && role !== "DRIVER") return "/login"
 
-  return `/login?${new URLSearchParams({
-    roleRequired: role,
+  const loginPath = role === "ADMIN" ? "/admin/login" : "/driver/login"
+  return `${loginPath}?${new URLSearchParams({
     callbackUrl: callbackUrl?.startsWith("/") && !callbackUrl.startsWith("//")
       ? callbackUrl
       : role === "ADMIN"
@@ -85,7 +85,7 @@ function ForgotPasswordContent() {
                 </div>
                 <h1 className="text-2xl font-black text-slate-900">Check your inbox</h1>
                 <p className="mt-3 text-sm font-medium leading-6 text-slate-500">
-                  If a RideWay account exists for {email.trim().toLowerCase()}, a secure reset link will be sent shortly.
+                  If a RideWay account exists for {email.trim().toLowerCase()}, a secure link to set or reset your password will be sent shortly.
                 </p>
                 {resetUrl && (
                   <div className="mt-5 rounded-2xl border border-amber-100 bg-amber-50 p-4 text-left text-xs font-semibold leading-5 text-amber-800">
@@ -104,9 +104,9 @@ function ForgotPasswordContent() {
                 <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50">
                   <Mail className="h-7 w-7 text-blue-600" />
                 </div>
-                <h1 className="text-3xl font-black text-slate-900">Reset your password</h1>
+                <h1 className="text-3xl font-black text-slate-900">Set or reset your password</h1>
                 <p className="mt-3 text-sm font-medium leading-6 text-slate-500">
-                  Enter the email address on your RideWay account. The reset link expires after 30 minutes and can be used once.
+                  Enter the email address on your RideWay or Google account. The secure link expires after 30 minutes and can be used once.
                 </p>
                 <form onSubmit={handleSubmit} className="mt-8 space-y-5">
                   <div className="space-y-2">
@@ -133,7 +133,7 @@ function ForgotPasswordContent() {
                   )}
                   <Button type="submit" disabled={loading} className="h-12 w-full rounded-xl bg-blue-600 font-bold text-white hover:bg-blue-700">
                     {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : null}
-                    Send Reset Instructions
+                    Send Secure Link
                   </Button>
                 </form>
               </>

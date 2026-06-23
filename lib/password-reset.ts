@@ -28,14 +28,14 @@ export function isPasswordResetEmailConfigured() {
 }
 
 function passwordResetMessage({ name, resetUrl }: { name?: string | null; resetUrl: string }) {
-    const text = `Reset your RideWay password: ${resetUrl}\n\nThis link expires in ${passwordResetTokenMinutes} minutes. If you did not request this reset, ignore this email.`
+    const text = `Set or reset your RideWay password: ${resetUrl}\n\nThis link expires in ${passwordResetTokenMinutes} minutes. If you did not request this link, ignore this email.`
     const html = `
         <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #0f172a;">
-            <h2>Reset your RideWay password</h2>
+            <h2>Set or reset your RideWay password</h2>
             <p>Hello ${name || "there"},</p>
-            <p>Use the secure link below to reset your RideWay password. This link expires in ${passwordResetTokenMinutes} minutes.</p>
-            <p><a href="${resetUrl}" style="display:inline-block;padding:12px 18px;background:#2563eb;color:#ffffff;text-decoration:none;border-radius:10px;font-weight:700;">Reset Password</a></p>
-            <p>If you did not request this reset, you can safely ignore this email.</p>
+            <p>Use the secure link below to set a RideWay password. This link expires in ${passwordResetTokenMinutes} minutes.</p>
+            <p><a href="${resetUrl}" style="display:inline-block;padding:12px 18px;background:#2563eb;color:#ffffff;text-decoration:none;border-radius:10px;font-weight:700;">Set Password</a></p>
+            <p>If you did not request this link, you can safely ignore this email.</p>
         </div>
     `
 
@@ -68,7 +68,7 @@ export async function sendPasswordResetEmail({
         await transporter.sendMail({
             from: gmailFrom,
             to,
-            subject: "Reset your RideWay password",
+            subject: "Set or reset your RideWay password",
             html: message.html,
             text: message.text,
         })

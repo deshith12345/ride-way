@@ -14,8 +14,8 @@ function loginHref(roleRequired: string | null, callbackUrl: string | null) {
     const role = roleRequired?.toUpperCase()
     if (role !== "ADMIN" && role !== "DRIVER") return "/login"
 
-    return `/login?${new URLSearchParams({
-        roleRequired: role,
+    const loginPath = role === "ADMIN" ? "/admin/login" : "/driver/login"
+    return `${loginPath}?${new URLSearchParams({
         callbackUrl: callbackUrl?.startsWith("/") && !callbackUrl.startsWith("//")
             ? callbackUrl
             : role === "ADMIN"
@@ -93,7 +93,7 @@ function ResetPasswordContent() {
                                 </div>
                                 <h1 className="text-2xl font-black text-slate-900">Password updated</h1>
                                 <p className="mt-3 text-sm font-medium leading-6 text-slate-500">
-                                    You can now sign in to RideWay using your new password.
+                                    You can now sign in with email and password, or continue with Google.
                                 </p>
                                 <Button asChild className="mt-8 h-12 w-full rounded-xl bg-blue-600 font-bold text-white hover:bg-blue-700">
                                     <Link href={backToLogin}>Return to Sign In</Link>
@@ -104,7 +104,7 @@ function ResetPasswordContent() {
                                 <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50">
                                     <KeyRound className="h-7 w-7 text-blue-600" />
                                 </div>
-                                <h1 className="text-3xl font-black text-slate-900">Create a new password</h1>
+                                <h1 className="text-3xl font-black text-slate-900">Set a RideWay password</h1>
                                 <p className="mt-3 text-sm font-medium leading-6 text-slate-500">
                                     Set a new password for {email || "your RideWay account"}.
                                 </p>
@@ -151,7 +151,7 @@ function ResetPasswordContent() {
                                     )}
                                     <Button type="submit" disabled={loading || !hasResetLink} className="h-12 w-full rounded-xl bg-blue-600 font-bold text-white hover:bg-blue-700">
                                         {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : null}
-                                        Reset Password
+                                        Save Password
                                     </Button>
                                 </form>
                             </>

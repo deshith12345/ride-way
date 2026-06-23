@@ -25,7 +25,7 @@ const errorMap: Record<string, { title: string; message: string; icon: any }> = 
     },
     OAuthAccountNotLinked: {
         title: "Sign In Failed",
-        message: "Sign-in could not be completed with that method. Try again from the correct RideWay portal.",
+        message: "Sign-in could not be completed with that method. Try again from the correct RideWay sign-in area.",
         icon: <ShieldAlert className="h-10 w-10 text-blue-500" />
     },
     Default: {

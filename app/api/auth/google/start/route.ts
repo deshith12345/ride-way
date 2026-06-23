@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
 import { isGoogleAuthConfigured } from "@/lib/auth-providers"
 import {
-  googleOAuthIntentCookieName,
-  googleOAuthIntentMaxAge,
-  resolveGoogleOAuthIntent,
-  serializeGoogleOAuthIntent,
-} from "@/lib/google-oauth-intent"
+  createGoogleRoleState,
+  googleRoleStateCookieName,
+  googleRoleStateMaxAge,
+  serializeGoogleRoleState,
+} from "@/lib/google-auth-flow"
 
 function shouldUseSecureCookies(req: NextRequest) {
   const forwardedProto = req.headers.get("x-forwarded-proto")?.split(",")[0]?.trim()
@@ -30,27 +30,27 @@ export async function POST(req: NextRequest) {
     body = {}
   }
 
-  const intent = resolveGoogleOAuthIntent({
+  const state = createGoogleRoleState({
+    role: body.role,
     roleRequired: body.roleRequired,
     callbackUrl: body.callbackUrl,
-    strictRole: body.strictRole,
   })
 
-  if (!intent) {
+  if (!state) {
     return NextResponse.json(
-      { error: "Google sign-in could not start from this portal." },
+      { error: "Google sign-in could not start from this sign-in area." },
       { status: 400 }
     )
   }
 
   const response = NextResponse.json({
     ok: true,
-    callbackUrl: intent.callbackUrl,
+    callbackUrl: state.callbackUrl,
   })
 
-  response.cookies.set(googleOAuthIntentCookieName, serializeGoogleOAuthIntent(intent), {
+  response.cookies.set(googleRoleStateCookieName, serializeGoogleRoleState(state), {
     httpOnly: true,
-    maxAge: googleOAuthIntentMaxAge,
+    maxAge: googleRoleStateMaxAge,
     path: "/",
     sameSite: "lax",
     secure: shouldUseSecureCookies(req),

@@ -27,7 +27,7 @@ const roleConfigs: Record<AppRole, {
     bg: "/admin-bg.jpg",
     title: "Create Admin Access",
     desc: "Manage routes, buses, schedules, users, and support from RideWay.",
-    formDescription: "Create an admin account for the RideWay management portal.",
+    formDescription: "Create an admin account for RideWay management.",
   },
   DRIVER: {
     label: "Driver",
@@ -94,7 +94,7 @@ function RegisterContent() {
     setError("")
 
     if (!isTravellerRegistration) {
-      setError("Admin and driver accounts must use the portal Google flow or be approved by an existing admin.")
+      setError("Admin and driver accounts must use the approved Google flow or be approved by an existing admin.")
       return
     }
 
@@ -234,7 +234,7 @@ function RegisterContent() {
           <div className="my-8 flex items-center gap-3">
             <span className="h-px flex-1 bg-slate-100"></span>
             <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">
-              {isTravellerRegistration ? "or use details" : "portal approval"}
+              {isTravellerRegistration ? "or use details" : "approval required"}
             </span>
             <span className="h-px flex-1 bg-slate-100"></span>
           </div>
@@ -351,7 +351,7 @@ function RegisterContent() {
           </form>
           ) : (
             <div className="rounded-lg border border-slate-200 bg-slate-50 p-5 text-sm font-semibold leading-6 text-slate-600">
-              Admin and driver Google sign-up only works for existing role-matched accounts or approved email allowlists. Ask an existing admin to approve your email before using this portal.
+              Admin and driver Google sign-up only works for existing role-matched accounts or approved email allowlists. Ask an existing admin to approve your email before continuing.
             </div>
           )}
 

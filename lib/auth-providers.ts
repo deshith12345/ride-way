@@ -35,7 +35,7 @@ function emailSetFromEnv(...names: string[]) {
   return new Set(values)
 }
 
-export function isGooglePortalSignupAllowed(role: AppRole, email: string) {
+export function isGoogleSignupAllowedForRole(role: AppRole, email: string) {
   if (role === "TRAVELLER") return true
 
   const normalizedEmail = email.trim().toLowerCase()

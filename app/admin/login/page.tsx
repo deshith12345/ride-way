@@ -14,7 +14,7 @@ import GoogleSignInButton from "@/components/shared/GoogleSignInButton"
 function authErrorMessage(code: string | null) {
     if (!code) return ""
     if (code === "OAuthRoleMismatch") return "That Google account belongs to another RideWay sign-in area. Use an admin account to continue."
-    if (code === "OAuthPortalSignupRestricted") return "Admin Google sign-up is limited to approved RideWay email addresses."
+    if (code === "OAuthRoleSignupRestricted") return "Admin Google sign-up is limited to approved RideWay email addresses."
     if (code === "OAuthEmailNotVerified") return "Google did not confirm this email as verified. Use a verified Google account."
     if (code === "OAuthEmailMissing") return "Google did not return an email address for this account."
     return "Sign-in could not be completed. Please check your credentials and try again."

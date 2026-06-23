@@ -5,12 +5,12 @@ import { cookies } from "next/headers"
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 import { normalizeRole, type AppRole } from "@/lib/authz"
-import { getGoogleProvider, isGooglePortalSignupAllowed } from "@/lib/auth-providers"
+import { getGoogleProvider, isGoogleSignupAllowedForRole } from "@/lib/auth-providers"
 import {
-  googleOAuthIntentCookieName,
-  parseGoogleOAuthIntent,
-  safeOAuthCallbackUrl,
-} from "@/lib/google-oauth-intent"
+  googleRoleStateCookieName,
+  parseGoogleRoleState,
+  safeGoogleCallbackUrl,
+} from "@/lib/google-auth-flow"
 
 const MAX_FAILED = 5
 const WINDOW_MS = 15 * 60 * 1000
@@ -48,10 +48,10 @@ function failedLogin(key: string) {
   })
 }
 
-async function currentGoogleOAuthIntent() {
+async function currentGoogleRoleState() {
   try {
     const cookieStore = await cookies()
-    return parseGoogleOAuthIntent(cookieStore.get(googleOAuthIntentCookieName)?.value)
+    return parseGoogleRoleState(cookieStore.get(googleRoleStateCookieName)?.value)
   } catch {
     return null
   }
@@ -134,9 +134,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async signIn({ user, account, profile }) {
       if (account?.provider !== "google") return true
 
-      const intent = await currentGoogleOAuthIntent()
-      const requestedRole = intent?.role ?? "TRAVELLER"
-      const callbackUrl = safeOAuthCallbackUrl(intent?.callbackUrl, requestedRole)
+      const roleState = await currentGoogleRoleState()
+      const requestedRole = roleState?.role ?? "TRAVELLER"
+      const callbackUrl = safeGoogleCallbackUrl(roleState?.callbackUrl, requestedRole)
       const email = googleProfileEmail(user.email, profile)
 
       if (!email) {
@@ -164,8 +164,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return true
       }
 
-      if (requestedRole !== "TRAVELLER" && !isGooglePortalSignupAllowed(requestedRole, email)) {
-        return portalLoginRedirect(requestedRole, callbackUrl, "OAuthPortalSignupRestricted")
+      if (requestedRole !== "TRAVELLER" && !isGoogleSignupAllowedForRole(requestedRole, email)) {
+        return portalLoginRedirect(requestedRole, callbackUrl, "OAuthRoleSignupRestricted")
       }
 
       ;(user as any).role = requestedRole
@@ -212,11 +212,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async createUser({ user }) {
       if (!user.id || !user.email) return
 
-      const intent = await currentGoogleOAuthIntent()
-      const role = intent?.role ?? normalizeRole((user as any).role) ?? "TRAVELLER"
+      const roleState = await currentGoogleRoleState()
+      const role = roleState?.role ?? normalizeRole((user as any).role) ?? "TRAVELLER"
       const email = user.email.trim().toLowerCase()
 
-      if (role !== "TRAVELLER" && !isGooglePortalSignupAllowed(role, email)) return
+      if (role !== "TRAVELLER" && !isGoogleSignupAllowedForRole(role, email)) return
 
       await prisma.user.update({
         where: { id: user.id },
