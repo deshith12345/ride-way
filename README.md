@@ -29,6 +29,7 @@ AUTH_GOOGLE_ID="your-google-client-id"
 AUTH_GOOGLE_SECRET="your-google-client-secret"
 AUTH_URL="https://your-vercel-domain.vercel.app"
 AUTH_SECRET="replace-with-a-long-random-secret"
+MONGODB_URI="mongodb+srv://USER:PASSWORD@HOST/DATABASE"
 ```
 
 The app also supports the legacy aliases `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `NEXTAUTH_URL`, and `NEXTAUTH_SECRET`.
@@ -42,7 +43,7 @@ GOOGLE_DRIVER_SIGNUP_EMAILS="driver1@example.com,driver2@example.com"
 
 After those values are set, the Google buttons on `/login`, `/register`, `/admin/login`, and `/driver/login` become active.
 
-After deployment, open `/api/auth/config-status` on your Vercel domain to verify that the production environment has the Google and Auth secrets loaded. The endpoint returns booleans only and does not expose secret values.
+After deployment, open `/api/auth/config-status` on your Vercel domain to verify that the production environment has the Google, Auth, and database secrets loaded. The endpoint returns booleans only and does not expose secret values.
 
 ## Password Reset Email
 

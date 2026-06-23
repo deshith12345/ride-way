@@ -28,6 +28,9 @@ export async function GET(req: NextRequest) {
         secretConfigured: envIsSet("AUTH_SECRET", "NEXTAUTH_SECRET"),
         urlConfigured: envIsSet("AUTH_URL", "NEXTAUTH_URL"),
       },
+      database: {
+        mongoUriConfigured: envIsSet("MONGODB_URI"),
+      },
       passwordResetEmail: {
         configured: isPasswordResetEmailConfigured(),
       },
