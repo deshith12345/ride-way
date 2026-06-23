@@ -65,6 +65,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       clientId:     process.env.GOOGLE_CLIENT_ID || process.env.AUTH_GOOGLE_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || process.env.AUTH_GOOGLE_SECRET,
       allowDangerousEmailAccountLinking: true,
+      // Always show the Google account picker — prevents auto-login to a cached account
+      authorization: {
+        params: {
+          prompt: "select_account",
+          access_type: "online",
+        },
+      },
       profile(profile) {
         return {
           id:            profile.sub,

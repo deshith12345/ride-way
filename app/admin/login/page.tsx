@@ -29,12 +29,14 @@ function AdminLoginContent() {
         getProviders().then((p) => setGoogleEnabled(Boolean(p?.google)))
     }, [])
 
-    // Already logged in as admin → go to dashboard
+    const switchAccount = searchParams.get("switchAccount") === "1"
+
+    // Already logged in as admin and NOT switching → go to dashboard
     useEffect(() => {
-        if (session?.user && (session.user as any).role === "ADMIN") {
+        if (!switchAccount && session?.user && (session.user as any).role === "ADMIN") {
             router.replace(callbackUrl)
         }
-    }, [session, callbackUrl, router])
+    }, [session, callbackUrl, router, switchAccount])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()

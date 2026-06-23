@@ -1,14 +1,13 @@
 import type { PortalRole } from "@/lib/authz"
 
 export function roleLoginPath(role: PortalRole, callbackUrl: string, switchAccount = false) {
-    const params = new URLSearchParams({
-        callbackUrl,
-        roleRequired: role,
-    })
+    // Use dedicated portal login pages
+    const loginPath =
+        role === "ADMIN"  ? "/admin/login"  :
+        role === "DRIVER" ? "/driver/login" : "/login"
 
-    if (switchAccount) {
-        params.set("switchAccount", "1")
-    }
+    const params = new URLSearchParams({ callbackUrl })
+    if (switchAccount) params.set("switchAccount", "1")
 
-    return `/login?${params.toString()}`
+    return `${loginPath}?${params.toString()}`
 }

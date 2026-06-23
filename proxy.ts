@@ -373,7 +373,8 @@ export default async function proxy(req: NextRequest) {
     }
 
     if (isAuthRoute) {
-        if (isLoggedIn) return redirectToRolePortal(req, userRole)
+        const switchAccount = req.nextUrl.searchParams.get("switchAccount") === "1"
+        if (isLoggedIn && !switchAccount) return redirectToRolePortal(req, userRole)
         return nextWithSelectedSession(req, selectedSession, expectedRole)
     }
 
